@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refrigerant Field Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap">
+
+<style>
+/* ── Token system ── */
+:root {
+  --bg:          #EEF3F8;
+  --surface:     #FFFFFF;
+  --card:        #F4F8FC;
+  --card-raised: #FFFFFF;
+  --border:      #C8D8E8;
+  --border-soft: #DDE8F2;
+  --accent:      #0A8C7E;
+  --accent-glow: #0A8C7E22;
+  --accent-dim:  #0A8C7E18;
+  --amber:       #C4780A;
+  --amber-bg:    #C4780A14;
+  --danger:      #C0392B;
+  --text-1:      #0D1A27;
+  --text-2:      #3A5670;
+  --text-3:      #6A8AA5;
+  --readout-bg:  #0D1A27;
+  --readout-fg:  #1CE8D4;
+  --readout-dim: #4A8A80;
+  --tab-active:  #0A8C7E;
+  --tab-idle:    #3A5670;
+  --tag-bg:      #E2EDF7;
+  --tag-text:    #2A5070;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:          #0A1520;
+    --surface:     #122030;
+    --card:        #1A2D40;
+    --card-raised: #1E3448;
+    --border:      #253D57;
+    --border-soft: #1E3040;
+    --accent:      #1CE8D4;
+    --accent-glow: #1CE8D430;
+    --accent-dim:  #1CE8D415;
+    --amber:       #F5A623;
+    --amber-bg:    #F5A62318;
+    --danger:      #E74C3C;
+    --text-1:      #DDE8F5;
+    --text-2:      #7A9BB8;
+    --text-3:      #4A6880;
+    --readout-bg:  #050D18;
+    --readout-fg:  #1CE8D4;
+    --readout-dim: #2A7870;
+    --tab-active:  #1CE8D4;
+    --tab-idle:    #5A7A9A;
+    --tag-bg:      #1A3048;
+    --tag-text:    #8AB5D8;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:          #0A1520;
+  --surface:     #122030;
+  --card:        #1A2D40;
+  --card-raised: #1E3448;
+  --border:      #253D57;
+  --border-soft: #1E3040;
+  --accent:      #1CE8D4;
+  --accent-glow: #1CE8D430;
+  --accent-dim:  #1CE8D415;
+  --amber:       #F5A623;
+  --amber-bg:    #F5A62318;
+  --danger:      #E74C3C;
+  --text-1:      #DDE8F5;
+  --text-2:      #7A9BB8;
+  --text-3:      #4A6880;
+  --readout-bg:  #050D18;
+  --readout-fg:  #1CE8D4;
+  --readout-dim: #2A7870;
+  --tab-active:  #1CE8D4;
+  --tab-idle:    #5A7A9A;
+  --tag-bg:      #1A3048;
+  --tag-text:    #8AB5D8;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+  padding-inline: 16px;
+  padding-block: 0 32px;
+}
+
+/* ── Header ── */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 20px 16px;
+  gap: 12px;
+}
+.logo-group { display: flex; align-items: baseline; gap: 10px; }
+.logo-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: .03em;
+  color: var(--text-1);
+  text-transform: uppercase;
+}
+.logo-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.theme-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 6px 10px;
+  line-height: 1;
+  transition: border-color .15s, color .15s;
+  flex-shrink: 0;
+}
+.theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Tabs ── */
+.tab-rail {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 20px;
+}
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--tab-idle);
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: .85rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  padding: 10px 6px;
+  text-align: center;
+  text-transform: uppercase;
+  transition: background .15s, color .15s;
+}
+.tab-btn:hover { color: var(--text-1); }
+.tab-btn.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent-glow);
+}
+
+/* ── Section cards ── */
+.panel { display: none; flex-direction: column; gap: 16px; }
+.panel.visible { display: flex; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+.card-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+/* ── Form fields ── */
+.field-group { display: flex; flex-direction: column; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label {
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: .02em;
+}
+.field-hint {
+  font-size: .72rem;
+  color: var(--text-3);
+  margin-top: -2px;
+  line-height: 1.35;
+}
+.field select,
+.field input[type="number"],
+.field input[type="text"] {
+  appearance: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-1);
+  font-family: 'Inter', sans-serif;
+  font-size: .95rem;
+  height: 48px;
+  padding-inline: 14px;
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+.field select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A9BB8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; }
+.field select:focus,
+.field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  outline: none;
+}
+.field select option { background: var(--surface); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ── Readout display ── */
+.readout {
+  background: var(--readout-bg);
+  border-radius: 14px;
+  padding: 22px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border-soft);
+  position: relative;
+  overflow: hidden;
+}
+.readout::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, var(--accent-glow) 0%, transparent 65%);
+  pointer-events: none;
+}
+.readout-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .2em;
+  color: var(--readout-dim);
+  text-transform: uppercase;
+}
+.readout-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3rem;
+  font-weight: 600;
+  color: var(--readout-fg);
+  letter-spacing: -.01em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.readout-value.empty { color: var(--readout-dim); font-size: 2rem; }
+.readout-unit {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  color: var(--readout-dim);
+  text-transform: uppercase;
+}
+.readout-range {
+  font-size: .72rem;
+  color: var(--readout-dim);
+  margin-top: 4px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Multi-readout row */
+.readout-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.readout.compact { padding: 16px 14px 12px; }
+.readout.compact .readout-value { font-size: 1.9rem; }
+.readout.amber .readout-value { color: var(--amber); }
+.readout.amber::before { background: radial-gradient(ellipse at 50% 0%, var(--amber-bg) 0%, transparent 65%); }
+
+/* ── Mode toggle ── */
+.mode-toggle {
+  display: flex;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  flex: 1;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  padding: 9px 6px;
+  text-transform: uppercase;
+  transition: background .15s, color .15s;
+}
+.mode-btn.active { background: var(--accent-dim); color: var(--accent); }
+
+/* ── GitHub Sync ── */
+.sync-blurb { font-size:.83rem; color:var(--text-2); margin-bottom:12px; line-height:1.5; }
+.sync-btns  { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+.sync-btns .add-btn { flex:1; min-width:160px; }
+#sync-status { font-family:'JetBrains Mono', monospace; font-size:.8rem; }
+
+/* ── Equipment table ── */
+.eq-table-wrap { overflow-x: auto; border-radius: 10px; }
+.eq-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 400px;
+  font-size: .85rem;
+}
+.eq-table thead tr {
+  background: var(--card);
+}
+.eq-table th {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 11px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.eq-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+.eq-table tbody tr:last-child td { border-bottom: none; }
+.eq-table tbody tr:hover { background: var(--accent-dim); }
+.refrig-tag {
+  display: inline-block;
+  background: var(--tag-bg);
+  color: var(--tag-text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* ── Add / Delete buttons ── */
+.add-btn {
+  align-self: flex-start;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: .88rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 10px 20px;
+  text-transform: uppercase;
+  transition: opacity .15s, transform .1s;
+}
+.add-btn:hover { opacity: .88; }
+.add-btn:active { transform: scale(.97); }
+
+.del-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: .75rem;
+  line-height: 1;
+  padding: 3px 7px;
+  transition: border-color .15s, color .15s;
+}
+.del-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ── Info note ── */
+.note {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber);
+  border-left-width: 3px;
+  border-radius: 8px;
+  color: var(--amber);
+  font-size: .8rem;
+  padding: 10px 14px;
+  line-height: 1.5;
+}
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: var(--border-soft);
+  margin-block: 4px;
+}
+
+/* ── Calc result rows ── */
+.calc-results { display: flex; flex-direction: column; gap: 10px; }
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--card);
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+}
+.calc-row-label { font-size: .83rem; color: var(--text-2); }
+.calc-row-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+.calc-row-value.accent { color: var(--accent); }
+.calc-row-value.amber { color: var(--amber); }
+.calc-row-value.muted { color: var(--text-3); font-size: .9rem; }
+
+@media (max-width: 480px) {
+  .two-col { grid-template-columns: 1fr; }
+  .readout-row { grid-template-columns: 1fr; }
+  .readout-value { font-size: 2.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* ── Info tab ── */
+.info-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.info-search {
+  flex: 1;
+  min-width: 160px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text-1);
+  font-size: .9rem;
+  font-family: inherit;
+}
+.info-search:focus { outline: none; border-color: var(--accent); }
+.filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-2);
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.filter-btn.active, .filter-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.info-card {
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.info-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.info-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.info-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-1);
+  line-height: 1.1;
+}
+.info-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.badge-type   { background: var(--tag-bg); color: var(--tag-text); }
+.badge-a1     { background: #0A8C7E22; color: var(--accent); }
+.badge-a2l    { background: var(--amber-bg); color: var(--amber); }
+.badge-a3     { background: #C0392B18; color: var(--danger); }
+.badge-phased { background: var(--amber-bg); color: var(--amber); }
+.badge-out    { background: #C0392B18; color: var(--danger); }
+.info-meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.info-meta-item { display: flex; flex-direction: column; gap: 1px; }
+.info-meta-label { font-size: .65rem; font-weight: 700; color: var(--text-3); letter-spacing: .06em; text-transform: uppercase; }
+.info-meta-value { font-size: .88rem; font-weight: 600; color: var(--text-1); font-family: 'JetBrains Mono', monospace; }
+.info-section-label {
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.info-uses { display: flex; flex-direction: column; gap: 3px; }
+.info-use-item { font-size: .82rem; color: var(--text-2); padding-left: 10px; position: relative; }
+.info-use-item::before { content: '·'; position: absolute; left: 0; color: var(--accent); }
+.info-refrig-links { display: flex; flex-wrap: wrap; gap: 4px; }
+.info-notes {
+  font-size: .78rem;
+  color: var(--text-3);
+  line-height: 1.5;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+.info-card[hidden] { display: none; }
+.info-card-click-hint {
+  font-size: .72rem;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: .03em;
+  margin-top: auto;
+  padding-top: 6px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.info-card:hover .info-card-click-hint { opacity: 1; }
+.info-card { cursor: pointer; }
+
+/* ── Detail modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(3px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 28px 28px 24px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-2);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.modal-close:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+.modal-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-1);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.modal-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.modal-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.modal-spec {
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.modal-spec-label { font-size: .63rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-3); }
+.modal-spec-value { font-size: 1rem; font-weight: 700; color: var(--text-1); font-family: 'JetBrains Mono', monospace; }
+.modal-spec-sub   { font-size: .65rem; color: var(--text-3); line-height: 1.35; margin-top: 2px; }
+.modal-section { margin-bottom: 16px; }
+.modal-section-title {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-3); margin-bottom: 6px;
+}
+.modal-uses { display: flex; flex-direction: column; gap: 4px; }
+.modal-use-item { font-size: .88rem; color: var(--text-2); padding-left: 14px; position: relative; }
+.modal-use-item::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-size: .7rem; top: 2px; }
+.modal-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.modal-note {
+  font-size: .84rem; color: var(--text-2); line-height: 1.6;
+  background: var(--card); border-radius: 8px; padding: 12px 14px;
+  border-left: 3px solid var(--accent);
+}
+.modal-warn {
+  font-size: .84rem; color: var(--amber); line-height: 1.6;
+  background: var(--amber-bg); border-radius: 8px; padding: 12px 14px;
+  border-left: 3px solid var(--amber);
+  margin-bottom: 12px;
+}
+.modal-divider { border: none; border-top: 1px solid var(--border-soft); margin: 16px 0; }
+</style>
+
+<!-- DATA + LOGIC -->
+<script>
+const REFRIG_DATA = {
+  "R-22":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120],psis:[37.7, 39.2, 40.7, 42.3, 43.9, 46.2, 47.9, 49.7, 51.5, 53.4, 56.0, 58.0, 60.1, 62.2, 64.4, 67.2, 69.5, 71.9, 74.3, 76.8, 80.0, 82.6, 85.3, 88.0, 90.8, 94.5, 97.4, 100.4, 103.4, 106.5, 110.8, 114.0, 117.3, 120.7, 124.1, 129.2, 132.8, 136.5, 140.2, 144.0, 149.7, 153.6, 157.6, 161.6, 165.7, 172.5, 176.8, 181.2, 185.6, 190.1, 197.8, 202.5, 207.3, 212.1, 217.0, 225.8, 231.0, 236.2, 241.5, 246.9, 256.6, 262.2, 267.9, 273.6, 279.4, 290.4, 296.5, 302.7, 308.9, 315.2, 327.4, 334.0, 340.7, 347.4, 354.2, 367.8, 375.0, 382.3, 389.6, 397.0, 411.8, 419.5, 427.3, 435.1, 443.0, 459.6, 467.8, 476.1, 484.4, 492.8, 511.4, 520.1, 528.9, 537.7, 546.6, 567.4, 576.6, 585.9, 595.2, 604.6, 627.9, 637.6, 647.4, 657.2, 667.1, 691.5, 701.7, 712.0, 722.3, 732.7, 758.8, 769.5, 780.3, 791.1, 802.0, 830.5, 841.7, 853.0, 864.3, 875.7, 905.2, 916.9, 928.7, 940.5, 952.4, 984.8, 997.0, 1009.3, 1021.6, 1034.0, 1067.5, 1080.2, 1093.0, 1105.8, 1118.7, 1153.2, 1166.5, 1179.9, 1193.3, 1206.8, 1242.3, 1256.2, 1270.2, 1284.2, 1298.3, 1335.8, 1350.3, 1364.9, 1379.5, 1394.2, 1433.8, 1448.9, 1464.1, 1479.3, 1494.6, 1536.0, 1551.7, 1567.5, 1583.3, 1599.2, 1642.4]},
+  "R-134a":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 120],psis:[7.4, 7.9, 8.4, 8.9, 9.4, 11.0, 11.6, 12.2, 12.8, 13.5, 15.4, 16.1, 16.9, 17.7, 18.5, 20.6, 21.5, 22.4, 23.4, 24.4, 26.7, 27.8, 28.9, 30.1, 31.3, 33.9, 35.2, 36.6, 38.0, 39.4, 42.2, 43.7, 45.3, 46.9, 48.5, 51.8, 53.5, 55.3, 57.1, 58.9, 62.7, 64.6, 66.6, 68.6, 70.6, 75.2, 77.3, 79.5, 81.7, 83.9, 89.3, 91.7, 94.1, 96.6, 99.1, 105.2, 107.9, 110.6, 113.4, 1069.9, 123.0, 126.0, 129.0, 132.1, 135.2, 142.9, 146.2, 149.5, 152.9, 156.3, 165.0, 168.6, 172.3, 176.0, 179.7, 189.5, 193.4, 197.3, 201.3, 205.3, 216.5, 220.7, 225.0, 229.3, 233.6, 246.3, 250.9, 255.5, 260.2, 264.9, 278.9, 283.9, 288.9, 294.0, 299.1, 314.6, 320.0, 325.5, 331.0, 336.6, 353.5, 359.4, 365.4, 371.4, 377.5, 396.5, 402.9, 409.4, 415.9, 422.5, 442.8, 449.7, 456.7, 463.7, 470.8, 492.4, 499.8, 507.3, 514.8, 522.4, 545.3, 553.2, 561.2, 569.2, 577.3, 601.2, 609.6, 618.1, 626.6, 635.2, 660.2, 669.2, 678.3, 687.4, 696.6, 724.1, 733.7, 743.4, 753.1, 762.9, 792.3, 802.5, 812.8, 823.1, 833.5, 864.8, 875.6, 886.5, 897.4, 908.4, 941.1, 952.5, 964.0, 975.5, 987.1, 1021.5, 1033.5, 1045.6, 1057.7, 1105.3]},
+  "R-290":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],psis:[15.6, 16.3, 17.0, 17.7, 18.4, 19.5, 20.3, 21.1, 21.9, 22.7, 24.0, 24.9, 25.8, 26.7, 27.6, 29.1, 30.1, 31.1, 32.2, 33.3, 35.0, 36.2, 37.4, 38.6, 39.9, 41.8, 43.2, 44.6, 46.0, 47.5, 49.6, 51.2, 52.8, 54.5, 56.2, 58.5, 60.3, 62.2, 64.1, 66.0, 68.5, 70.6, 72.7, 74.9, 77.1, 79.9, 82.2, 84.6, 87.0, 89.4, 92.5, 95.1, 97.7, 100.4, 103.1, 106.4, 109.3, 112.2, 115.2, 118.2, 121.8, 125.0, 128.2, 131.5, 134.8, 138.7, 142.2, 145.8, 149.4, 153.0, 157.3, 161.1, 165.0, 168.9, 172.9, 177.5, 181.6, 185.8, 190.0, 194.3, 199.2, 203.6, 208.1, 212.6, 217.2, 222.4, 227.2, 232.0, 236.9, 241.8, 247.4, 252.5, 257.7, 262.9, 268.2, 274.1, 279.6, 285.1, 290.7, 296.3, 302.6, 308.4, 314.3, 320.2, 326.2, 332.8, 339.0, 345.3, 351.6, 358.0, 365.0, 371.6, 378.2, 384.9, 391.7, 399.1, 406.1, 413.1, 420.2, 427.4, 435.2, 442.6, 450.0, 457.5, 465.1, 473.3, 481.1, 488.9, 496.8, 504.8, 513.4, 521.6, 529.8, 538.1, 546.5, 555.5, 564.1, 572.7, 581.4, 590.2, 599.6]},
+  "R-404a":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],psis:[72.2, 74.3, 76.4, 78.6, 80.8, 85.4, 87.7, 90.1, 92.5, 95.0, 100.0, 102.6, 105.2, 107.9, 110.6, 116.1, 119.0, 121.9, 124.9, 127.9, 134.0, 137.2, 140.4, 143.7, 147.0, 153.8, 157.3, 160.8, 164.4, 168.0, 175.4, 179.2, 183.1, 187.0, 191.0, 199.2, 203.4, 207.7, 212.0, 216.4, 225.3, 229.9, 234.5, 239.2, 243.9, 253.5, 258.4, 263.4, 268.4, 273.5, 283.8, 289.1, 294.4, 299.8, 305.2, 316.2, 321.9, 327.6, 333.4, 339.2, 351.0, 357.1, 363.2, 369.4, 375.6, 388.3, 394.8, 401.4, 408.0, 414.7, 428.2, 435.2, 442.2, 449.3, 456.4, 470.9, 478.3, 485.8, 493.3, 500.9, 516.2, 524.1, 532.0, 540.0, 548.0, 564.3, 572.6, 581.0, 589.4, 597.9, 615.0, 623.8, 632.6, 641.5, 650.4, 668.5, 677.7, 687.0, 696.3, 705.7, 724.6, 734.3, 744.0, 753.8, 763.6, 783.5, 793.7, 804.0, 814.3, 824.7, 845.7, 856.4, 867.2, 878.0, 888.9, 910.9, 922.1, 933.4, 944.7, 956.1, 979.1, 990.9, 1002.8, 1014.7, 1026.7, 1050.9, 1063.3, 1075.7, 1088.2, 1100.7, 1126.0, 1138.9, 1151.9, 1164.9, 1178.0, 1204.4, 1217.9, 1231.5, 1245.1, 1258.8, 1286.4]},
+  "R-407c":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],psis:[24.5, 25.4, 26.3, 27.3, 28.3, 30.3, 31.4, 32.5, 33.6, 34.8, 37.2, 38.5, 39.8, 41.2, 42.6, 45.5, 47.0, 48.6, 50.2, 51.9, 55.3, 57.1, 59.0, 60.9, 62.8, 66.8, 68.9, 71.0, 73.2, 75.4, 80.0, 82.4, 84.9, 87.5, 90.1, 95.5, 98.3, 101.2, 104.1, 107.1, 113.3, 116.5, 119.8, 123.1, 126.5, 133.5, 137.1, 140.8, 144.5, 148.3, 156.1, 160.1, 164.2, 168.4, 172.6, 181.2, 185.7, 190.2, 194.8, 199.5, 209.1, 214.1, 219.1, 224.2, 229.4, 240.0, 245.5, 251.1, 256.8, 262.5, 274.2, 280.2, 286.3, 292.5, 298.7, 311.4, 317.9, 324.5, 331.2, 337.9, 351.6, 358.6, 365.7, 372.9, 380.1, 394.9, 402.5, 410.2, 418.0, 425.8, 441.8, 450.0, 458.3, 466.6, 475.0, 492.2, 501.0, 509.9, 518.8, 527.8, 546.2, 555.6, 565.1, 574.6, 584.2, 603.7, 613.7, 623.8, 633.9, 644.1, 665.0, 675.7, 686.5, 697.3, 708.2, 730.4, 741.8, 753.3, 764.8, 776.4, 800.0, 812.1, 824.3, 836.5, 848.8, 873.8, 886.6, 899.5, 912.4, 925.4, 951.8, 965.4, 979.1, 992.8, 1006.6, 1034.6, 1049.0, 1063.5, 1078.0, 1092.6, 1122.2]},
+  "R-407f":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],psis:[29.8, 30.9, 32.0, 33.2, 34.4, 36.8, 38.1, 39.5, 40.9, 42.3, 45.2, 46.8, 48.4, 50.0, 51.7, 55.1, 56.9, 58.8, 60.7, 62.7, 66.7, 68.8, 71.0, 73.2, 75.5, 80.1, 82.5, 85.0, 87.5, 90.1, 95.3, 98.1, 100.9, 103.8, 106.7, 112.7, 115.8, 119.0, 122.2, 125.5, 132.2, 135.7, 139.3, 142.9, 146.6, 154.1, 158.0, 162.0, 166.0, 170.1, 178.4, 182.7, 187.1, 191.5, 196.0, 205.2, 210.0, 214.8, 219.7, 224.7, 234.8, 240.1, 245.5, 250.9, 256.4, 267.6, 273.4, 279.3, 285.2, 291.2, 303.5, 309.8, 316.2, 322.6, 329.1, 342.4, 349.2, 356.1, 363.0, 370.0, 384.3, 391.6, 399.0, 406.4, 413.9, 429.2, 437.0, 444.9, 452.8, 460.8, 477.1, 485.5, 494.0, 502.5, 511.1, 528.6, 537.6, 546.7, 555.8, 565.0, 583.8, 593.4, 603.1, 612.8, 622.6, 642.6, 652.8, 663.1, 673.4, 683.8, 705.0, 715.9, 726.9, 737.9, 749.0, 771.6, 783.2, 794.9, 806.6, 818.4, 842.4, 854.7, 867.1, 879.5, 892.0, 917.5, 930.5, 943.6, 956.7, 969.9, 996.7, 1010.5, 1024.4, 1038.3, 1052.3, 1080.8, 1095.4, 1110.1, 1124.8, 1139.6, 1169.7]},
+  "R-410a":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150],psis:[64.2, 66.0, 67.8, 69.7, 71.6, 76.5, 78.5, 80.6, 82.7, 84.9, 90.7, 93.0, 95.4, 97.8, 100.3, 106.8, 109.5, 112.2, 115.0, 117.9, 125.0, 128.1, 131.3, 134.6, 137.9, 145.5, 149.1, 152.7, 156.4, 160.2, 168.4, 172.5, 176.6, 180.8, 185.1, 193.9, 198.5, 203.2, 207.9, 212.8, 222.3, 227.4, 232.5, 237.7, 243.0, 253.7, 259.3, 265.0, 270.8, 276.7, 288.4, 294.6, 300.9, 307.3, 313.8, 326.6, 333.4, 340.3, 347.3, 354.4, 368.6, 376.1, 383.7, 391.4, 399.2, 414.6, 422.8, 431.1, 439.5, 448.0, 465.0, 474.0, 483.1, 492.3, 501.6, 519.9, 529.7, 539.6, 549.6, 559.7, 579.7, 590.3, 601.0, 611.8, 622.7, 644.7, 656.2, 667.8, 679.5, 691.3, 715.2, 727.6, 740.1, 752.7, 765.4, 791.4, 804.7, 818.1, 831.6, 845.2, 873.8, 888.0, 902.3, 916.7, 931.2, 961.0, 976.2, 991.5, 1006.9, 1022.4, 1054.0, 1070.2, 1086.5, 1102.9, 1119.4, 1152.6, 1169.7, 1186.9, 1204.2, 1221.6, 1257.0, 1275.1, 1293.3, 1311.6, 1330.0, 1367.2, 1386.2, 1405.3, 1424.5, 1443.8, 1482.8, 1502.7, 1522.7, 1542.8, 1563.0, 1604.0, 1624.9, 1645.9, 1667.0, 1688.2, 1731.0, 1752.9, 1774.9, 1797.0, 1819.2, 1864.0, 1886.9, 1909.9, 1933.0, 1956.2, 2003.0, 2027.0, 2051.1, 2075.3, 2099.6, 2148.0, 2173.0, 2198.1, 2223.3, 2248.6, 2299.0, 2325.0, 2351.1, 2377.3, 2403.6, 2456.0, 2483.0, 2510.1, 2537.3, 2564.6, 2619.0, 2647.0, 2675.1, 2703.3, 2731.6, 2788.0, 2817.0, 2846.1, 2875.3, 2904.6, 2963.0, 2993.0, 3023.1, 3053.3, 3083.6, 3144.0, 3175.0, 3206.1, 3237.3, 3268.6, 3331.0]},
+  "R-417a":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],psis:[16.8, 17.5, 18.2, 18.9, 19.7, 21.2, 22.0, 22.9, 23.8, 24.7, 26.5, 27.5, 28.6, 29.7, 30.8, 33.1, 34.3, 35.6, 36.9, 38.3, 41.0, 42.5, 44.1, 45.7, 47.3, 50.6, 52.4, 54.3, 56.2, 58.2, 62.1, 64.2, 66.4, 68.6, 70.9, 75.5, 78.0, 80.6, 83.2, 85.9, 91.3, 94.2, 97.2, 100.2, 103.3, 109.7, 113.0, 116.4, 119.8, 123.3, 130.5, 134.3, 138.2, 142.1, 146.1, 154.4, 158.7, 163.1, 167.5, 172.0, 181.2, 186.0, 190.9, 195.8, 200.8, 211.1, 216.5, 222.0, 227.5, 233.1, 244.5, 250.5, 256.6, 262.7, 268.9, 281.7, 288.3, 295.0, 301.7, 308.5, 322.5, 329.8, 337.2, 344.6, 352.1, 367.5, 375.5, 383.6, 391.7, 399.9, 416.8, 425.5, 434.3, 443.1, 452.0, 470.3, 479.7, 489.2, 498.7, 508.3, 528.1, 538.3, 548.6, 558.9, 569.3, 590.8, 601.9, 613.1, 624.3, 635.6, 658.9, 670.9, 683.0, 695.1, 707.3, 732.4, 745.2, 758.1, 771.0, 784.0, 810.8, 824.5, 838.3, 852.1, 866.0, 894.5, 909.1, 923.8, 938.5, 953.3, 983.6, 999.2, 1014.9, 1030.6, 1046.4, 1078.7, 1095.2, 1111.8, 1128.4, 1145.1, 1179.1]},
+  "R-422a":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],psis:[31.6, 32.8, 34.0, 35.3, 36.6, 39.2, 40.6, 42.1, 43.6, 45.1, 48.3, 50.0, 51.7, 53.5, 55.3, 59.0, 61.0, 63.0, 65.1, 67.2, 71.5, 73.8, 76.2, 78.6, 81.1, 86.1, 88.8, 91.5, 94.3, 97.1, 102.9, 105.9, 109.0, 112.1, 115.3, 121.8, 125.2, 128.7, 132.2, 135.8, 143.1, 146.9, 150.8, 154.7, 158.7, 166.8, 171.1, 175.5, 179.9, 184.4, 193.5, 198.3, 203.2, 208.1, 213.1, 223.3, 228.6, 234.0, 239.4, 244.9, 256.1, 262.0, 267.9, 273.9, 280.0, 292.5, 298.9, 305.4, 311.9, 318.5, 332.1, 339.0, 346.0, 353.0, 360.1, 374.7, 382.2, 389.8, 397.4, 405.1, 421.0, 429.1, 437.3, 445.5, 453.8, 470.8, 479.5, 488.3, 497.1, 506.0, 524.2, 533.5, 542.9, 552.3, 561.8, 581.3, 591.3, 601.4, 611.5, 621.7, 642.6, 653.3, 664.1, 674.9, 685.8, 708.1, 719.5, 731.0, 742.5, 754.1, 777.8, 790.0, 802.3, 814.6, 827.0, 852.4, 865.4, 878.5, 891.6, 904.8, 931.8, 945.6, 959.5, 973.4, 987.4, 1015.9, 1030.5, 1045.2, 1059.9, 1074.7, 1104.9, 1120.4, 1136.0, 1151.6, 1167.3, 1199.3, 1215.7, 1232.2, 1248.7, 1265.3, 1298.9]},
+  "R-454B":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140],psis:[61.0, 62.7, 64.4, 66.2, 68.0, 72.7, 74.6, 76.6, 78.6, 80.7, 86.2, 88.4, 90.6, 92.9, 95.3, 101.5, 104.0, 106.6, 109.3, 112.0, 118.8, 121.7, 124.7, 127.8, 131.0, 138.2, 141.6, 145.1, 148.6, 152.2, 160.0, 163.9, 167.8, 171.8, 175.8, 184.2, 188.6, 193.0, 197.5, 202.2, 211.2, 216.0, 220.9, 225.8, 230.9, 241.0, 246.3, 251.8, 257.3, 262.9, 274.0, 279.9, 285.9, 291.9, 298.1, 310.3, 316.7, 323.3, 329.9, 336.7, 350.2, 357.3, 364.5, 371.8, 379.2, 393.9, 401.7, 409.5, 417.5, 425.6, 441.8, 450.3, 458.9, 467.7, 476.5, 493.9, 503.2, 512.6, 522.1, 531.7, 550.7, 560.8, 571.0, 581.2, 591.6, 612.5, 623.4, 634.4, 645.5, 656.7, 679.4, 691.2, 703.1, 715.1, 727.1, 751.8, 764.5, 777.2, 790.0, 802.9, 830.1, 843.6, 857.2, 870.9, 884.6, 913.0, 927.4, 941.9, 956.6, 971.3, 1001.3, 1016.7, 1032.2, 1047.8, 1063.4, 1095.0, 1111.2, 1127.6, 1144.0, 1160.5, 1194.2, 1211.4, 1228.6, 1246.0, 1263.5, 1298.8, 1316.9, 1335.0, 1353.3, 1371.6, 1408.7, 1427.6, 1446.6, 1465.7, 1484.9, 1523.8, 1543.7, 1563.6, 1583.7, 1603.8, 1644.5, 1665.3, 1686.1, 1707.2, 1728.2, 1770.8, 1792.6, 1814.4, 1836.4, 1858.4, 1902.9, 1925.7, 1948.5, 1971.5, 1994.6, 2040.6, 2064.4, 2088.2, 2112.1, 2136.2, 2184.1, 2208.8, 2233.5, 2258.4, 2283.4, 2333.2, 2358.9, 2384.6, 2410.4, 2436.4, 2488.1, 2514.7, 2541.3, 2568.1, 2595.0, 2648.6, 2676.2, 2703.8, 2731.5, 2759.4, 2815.0]},
+  "R-507a":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],psis:[25.3, 26.3, 27.4, 28.5, 29.6, 31.8, 33.0, 34.3, 35.6, 37.0, 39.7, 41.2, 42.8, 44.4, 46.1, 49.4, 51.2, 53.1, 55.0, 57.0, 61.0, 63.2, 65.5, 67.8, 70.2, 75.0, 77.6, 80.3, 83.0, 85.8, 91.5, 94.5, 97.6, 100.7, 103.9, 110.4, 113.8, 117.3, 120.8, 124.4, 131.8, 135.7, 139.7, 143.7, 147.8, 156.2, 160.6, 165.1, 169.6, 174.2, 183.6, 188.4, 193.3, 198.2, 203.2, 213.5, 218.8, 224.2, 229.6, 235.1, 246.3, 252.1, 258.0, 263.9, 269.9, 282.2, 288.5, 294.9, 301.3, 307.8, 321.1, 328.0, 335.0, 342.0, 349.1, 363.7, 371.3, 379.0, 386.7, 394.5, 410.5, 418.8, 427.2, 435.6, 444.1, 461.6, 470.7, 479.9, 489.1, 498.4, 517.5, 527.3, 537.2, 547.1, 557.1, 577.6, 588.1, 598.7, 609.3, 620.0, 641.9, 653.1, 664.4, 675.7, 687.1, 710.5, 722.6, 734.8, 747.0, 759.3, 784.6, 797.7, 810.9, 824.1, 837.4, 864.7, 878.7, 892.8, 906.9, 921.1, 950.2, 965.2, 980.3, 995.4, 1010.6, 1041.7, 1057.6, 1073.6, 1089.6, 1105.7, 1138.5, 1155.2, 1172.0, 1188.8, 1205.7, 1240.1, 1257.7, 1275.4, 1293.1, 1310.9, 1347.1]},
+  "R-516a":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],psis:[7.9, 8.4, 9.0, 9.5, 10.1, 11.3, 12.0, 12.7, 13.4, 14.2, 15.7, 16.6, 17.5, 18.4, 19.4, 21.4, 22.5, 23.6, 24.8, 26.0, 28.5, 29.8, 31.2, 32.7, 34.2, 37.3, 38.9, 40.6, 42.4, 44.2, 47.9, 49.9, 52.0, 54.1, 56.3, 60.8, 63.2, 65.7, 68.3, 70.9, 76.3, 79.1, 82.0, 85.0, 88.1, 94.4, 97.7, 101.1, 104.6, 108.2, 115.5, 119.3, 123.2, 127.2, 131.3, 139.7, 144.0, 148.4, 152.9, 157.5, 166.9, 171.8, 176.8, 181.9, 187.1, 197.7, 203.2, 208.8, 214.5, 220.3, 232.2, 238.3, 244.5, 250.8, 257.2, 270.3, 277.0, 283.8, 290.7, 297.7, 312.1, 319.5, 327.0, 334.6, 342.3, 358.1, 366.2, 374.4, 382.7, 391.1, 408.3, 417.1, 426.0, 435.0, 444.1, 462.8, 472.4, 482.1, 491.9, 501.8, 522.2, 532.6, 543.1, 553.7, 564.4, 586.4, 597.6, 608.9, 620.3, 631.8, 655.4, 667.5, 679.7, 692.0, 704.4, 729.9, 742.9, 756.0, 769.2, 782.5, 809.8, 823.7, 837.7, 851.8, 866.0, 895.1, 909.9, 924.8, 939.8, 954.9, 985.8, 1001.6, 1017.5, 1033.5, 1049.6, 1082.5, 1099.3, 1116.2, 1133.2, 1150.3, 1185.2]},
+  "R-32":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150],psis:[11.0, 11.7, 12.4, 13.0, 13.7, 14.4, 15.2, 15.9, 16.6, 17.4, 18.2, 19.0, 19.8, 20.6, 21.4, 22.3, 23.2, 24.1, 25.0, 25.9, 26.8, 27.8, 28.7, 29.7, 30.7, 31.7, 32.8, 33.8, 34.9, 36.0, 37.1, 38.2, 39.4, 40.5, 41.7, 42.9, 44.1, 45.4, 46.7, 48.0, 49.3, 50.6, 51.9, 53.3, 54.7, 56.1, 57.5, 59.0, 60.5, 62.0, 63.5, 65.0, 66.6, 68.2, 69.8, 71.5, 73.1, 74.8, 76.5, 78.3, 80.0, 81.8, 83.6, 85.5, 87.3, 89.2, 91.1, 93.1, 95.1, 97.1, 99.1, 101.2, 103.2, 105.3, 107.5, 109.7, 111.9, 114.1, 116.3, 118.6, 121.0, 123.3, 125.7, 128.1, 130.5, 133.0, 135.5, 138.0, 140.6, 143.2, 145.8, 148.5, 151.2, 153.9, 156.7, 159.5, 162.3, 165.2, 168.1, 171.1, 174.1, 177.1, 180.1, 183.2, 186.3, 189.5, 192.7, 195.9, 199.2, 202.5, 205.8, 209.2, 212.6, 216.1, 219.6, 223.2, 226.7, 230.4, 234.0, 237.7, 241.5, 245.3, 249.1, 253.0, 256.9, 260.9, 264.9, 268.9, 273.0, 277.1, 281.3, 285.6, 289.8, 294.1, 298.5, 302.9, 307.4, 311.9, 316.4, 321.0, 325.7, 330.4, 335.1, 339.9, 344.8, 349.6, 354.6, 359.6, 364.6, 369.7, 374.9, 380.1, 385.3, 390.6, 396.0, 401.4, 406.9, 412.4, 418.0, 423.6, 429.3, 435.1, 440.9, 446.8, 452.7, 458.7, 464.7, 470.8, 477.0, 483.2, 489.5, 495.8, 502.2, 508.7, 515.2, 521.8, 528.5, 535.2, 542.0, 548.9, 555.8, 562.8, 569.8, 577.0, 584.1, 591.4, 598.7, 606.1, 613.6, 621.2, 628.8]},
+  "R-1234yf":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150],psis:[-5.7, -5.4, -5.2, -4.9, -4.6, -4.4, -4.1, -3.8, -3.5, -3.2, -2.9, -2.6, -2.3, -2.0, -1.7, -1.4, -1.0, -0.7, -0.3, 0.0, 0.4, 0.8, 1.1, 1.5, 1.9, 2.3, 2.7, 3.1, 3.5, 4.0, 4.4, 4.8, 5.3, 5.8, 6.2, 6.7, 7.2, 7.7, 8.2, 8.7, 9.2, 9.8, 10.3, 10.8, 11.4, 11.9, 12.5, 13.1, 13.7, 14.3, 14.9, 15.5, 16.2, 16.8, 17.5, 18.1, 18.8, 19.5, 20.2, 20.9, 21.6, 22.3, 23.1, 23.8, 24.6, 25.4, 26.1, 26.9, 27.8, 28.6, 29.4, 30.3, 31.1, 32.0, 32.9, 33.8, 34.7, 35.6, 36.5, 37.5, 38.4, 39.4, 40.4, 41.4, 42.4, 43.4, 44.5, 45.5, 46.6, 47.7, 48.8, 49.9, 51.0, 52.1, 53.3, 54.5, 55.7, 56.9, 58.1, 59.3, 60.6, 61.8, 63.1, 64.4, 65.7, 67.0, 68.4, 69.8, 71.1, 72.5, 73.9, 75.4, 76.8, 78.3, 79.8, 81.3, 82.8, 84.3, 85.9, 87.4, 89.0, 90.6, 92.3, 93.9, 95.6, 97.2, 98.9, 100.7, 102.4, 104.2, 105.9, 107.7, 109.6, 111.4, 113.3, 115.1, 117.0, 119.0, 120.9, 122.9, 124.9, 126.9, 128.9, 130.9, 133.0, 135.1, 137.2, 139.3, 141.5, 143.7, 145.9, 148.1, 150.4, 152.7, 154.9, 157.3, 159.6, 162.0, 164.4, 166.8, 169.2, 171.7, 174.2, 176.7, 179.3, 181.8, 184.4, 187.0, 189.7, 192.3, 195.0, 197.7, 200.5, 203.3, 206.1, 208.9, 211.7, 214.6, 217.5, 220.5, 223.4, 226.4, 229.4, 232.5, 235.6, 238.7, 241.8, 245.0, 248.2, 251.4, 254.7]},
+  "R-449A":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150],psis:[4.5, 5.0, 5.5, 6.0, 6.6, 7.1, 7.7, 8.2, 8.8, 9.3, 9.9, 10.5, 11.1, 11.8, 12.4, 13.0, 13.7, 14.4, 15.0, 15.7, 16.4, 17.1, 17.9, 18.6, 19.4, 20.1, 20.9, 21.7, 22.5, 23.4, 24.2, 25.1, 25.9, 26.8, 27.7, 28.6, 29.5, 30.5, 31.4, 32.4, 33.4, 34.4, 35.4, 36.4, 37.5, 38.5, 39.6, 40.7, 41.8, 43.0, 44.1, 45.3, 46.5, 47.6, 48.9, 50.1, 51.4, 52.6, 53.9, 55.2, 56.6, 57.9, 59.3, 60.7, 62.1, 63.5, 64.9, 66.4, 67.9, 69.4, 70.9, 72.5, 74.0, 75.6, 77.2, 78.9, 80.5, 82.2, 83.9, 85.6, 87.4, 89.1, 90.9, 92.7, 94.6, 96.4, 98.3, 100.2, 102.1, 104.1, 106.1, 108.1, 110.1, 112.1, 114.2, 116.3, 118.4, 120.6, 122.8, 125.0, 127.2, 129.4, 131.7, 134.0, 136.4, 138.7, 141.1, 143.5, 146.0, 148.5, 151.0, 153.5, 156.0, 158.6, 161.2, 163.9, 166.6, 169.3, 172.0, 174.8, 177.6, 180.4, 183.2, 186.1, 189.0, 192.0, 194.9, 197.9, 201.0, 204.1, 207.2, 210.3, 213.5, 216.7, 219.9, 223.2, 226.5, 229.8, 233.2, 236.6, 240.0, 243.5, 247.0, 250.5, 254.1, 257.7, 261.4, 265.0, 268.8, 272.5, 276.3, 280.1, 284.0, 287.9, 291.8, 295.8, 299.8, 303.9, 308.0, 312.1, 316.3, 320.5, 324.7, 329.0, 333.3, 337.7, 342.1, 346.6, 351.0, 355.6, 360.1, 364.7, 369.4, 374.1, 378.8, 383.6, 388.4, 393.3, 398.2, 403.1, 408.1, 413.2, 418.3, 423.4, 428.6, 433.8, 439.1, 444.4, 449.7, 455.1, 460.6]},
+  "R-422D":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150],psis:[2.5, 3.0, 3.4, 3.9, 4.3, 4.8, 5.3, 5.8, 6.3, 6.8, 7.3, 7.9, 8.4, 9.0, 9.5, 10.1, 10.7, 11.3, 11.9, 12.5, 13.1, 13.8, 14.4, 15.1, 15.8, 16.4, 17.1, 17.9, 18.6, 19.3, 20.1, 20.8, 21.6, 22.4, 23.2, 24.0, 24.8, 25.6, 26.5, 27.4, 28.2, 29.1, 30.0, 31.0, 31.9, 32.9, 33.8, 34.8, 35.8, 36.8, 37.8, 38.9, 39.9, 41.0, 42.1, 43.2, 44.3, 45.4, 46.6, 47.8, 49.0, 50.1, 51.4, 52.6, 53.9, 55.1, 56.4, 57.7, 59.1, 60.4, 61.8, 63.1, 64.5, 66.0, 67.4, 68.9, 70.3, 71.8, 73.4, 74.9, 76.5, 78.0, 79.6, 81.2, 82.9, 84.5, 86.2, 87.9, 89.6, 91.4, 93.2, 94.9, 96.8, 98.6, 100.4, 102.3, 104.2, 106.1, 108.1, 110.0, 112.0, 114.1, 116.1, 118.2, 120.3, 122.4, 124.5, 126.7, 128.8, 131.1, 133.3, 135.6, 137.9, 140.2, 142.5, 144.9, 147.3, 149.7, 152.1, 154.6, 157.1, 159.6, 162.2, 164.8, 167.4, 170.0, 172.7, 175.4, 178.1, 180.9, 183.7, 186.5, 189.3, 192.2, 195.1, 198.0, 201.0, 204.0, 207.0, 210.1, 213.2, 216.3, 219.4, 222.6, 225.8, 229.1, 232.4, 235.7, 239.0, 242.4, 245.8, 249.3, 252.8, 256.3, 259.8, 263.4, 267.0, 270.7, 274.4, 278.1, 281.9, 285.7, 289.5, 293.4, 297.3, 301.2, 305.2, 309.3, 313.3, 317.4, 321.6, 325.7, 329.9, 334.2, 338.5, 342.8, 347.2, 351.6, 356.1, 360.6, 365.1, 369.7, 374.4, 379.0, 383.8, 388.5, 393.3, 398.2, 403.1, 408.0, 413.0]},
+  "R-448A":{temps:[-51.0, -48.6, -46.2, -44.0, -41.9, -39.8, -37.8, -35.9, -34.1, -32.4, -30.6, -29.0, -27.4, -25.8, -24.3, -21.4, -18.6, -16.0, -13.5, -11.0, -8.7, -6.5, -5.4, -3.3, -0.2, 2.7, 5.5, 8.2, 10.8, 13.2, 15.6, 17.9, 20.9, 23.8, 26.5, 36.5, 46.5, 56.2, 65.4, 70.2, 75.1, 80.2, 85.3, 90.5, 95.7, 100.7, 105.6, 110.9, 115.9, 121.0, 126.2, 131.4, 136.6, 141.8, 146.9],psis:[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0, 26.0, 28.0, 29.0, 31.0, 34.0, 37.0, 40.0, 43.0, 46.0, 49.0, 52.0, 55.0, 59.0, 63.0, 67.0, 83.0, 101.0, 121.0, 142.0, 154.0, 167.0, 181.0, 196.0, 212.0, 229.0, 246.0, 264.0, 284.0, 304.0, 325.0, 348.0, 372.0, 397.0, 423.0, 450.0]},
+  "R-438A":{temps:[-44.2, -41.7, -39.3, -37.0, -34.8, -32.7, -30.7, -28.8, -26.9, -25.1, -23.4, -20.1, -16.9, -13.9, -11.1, -8.4, -5.8, -3.4, -1.0, 1.3, 3.5, 5.7, 7.7, 9.7, 11.7, 13.6, 15.4, 17.2, 18.9, 20.6, 22.3, 23.9, 25.5, 27.0, 28.6, 30.1, 31.5, 32.9, 34.3, 35.7, 37.1, 40.3, 43.5, 46.5, 49.4, 52.2, 54.9, 57.5, 60.1, 62.6, 65.0, 67.3, 69.6, 71.8, 73.9, 76.0, 78.1, 80.1, 82.1, 84.0, 85.9, 87.8, 89.6, 91.4, 93.1, 94.8, 96.5, 98.2, 99.8, 101.4, 103.0, 104.6, 106.1, 107.6, 109.1, 110.5, 112.0, 113.4, 114.8, 116.2, 117.6, 118.9, 120.3, 121.6, 122.9, 124.2, 125.4, 127.9, 130.4, 132.7, 135.1, 137.4, 139.6, 141.8, 143.9, 146.1, 148.1],psis:[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0, 26.0, 28.0, 30.0, 32.0, 34.0, 36.0, 38.0, 40.0, 42.0, 44.0, 46.0, 48.0, 50.0, 52.0, 54.0, 56.0, 58.0, 60.0, 62.0, 64.0, 66.0, 68.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0, 145.0, 150.0, 155.0, 160.0, 165.0, 170.0, 175.0, 180.0, 185.0, 190.0, 195.0, 200.0, 205.0, 210.0, 215.0, 220.0, 225.0, 230.0, 235.0, 240.0, 245.0, 250.0, 255.0, 260.0, 265.0, 270.0, 275.0, 280.0, 285.0, 290.0, 295.0, 300.0, 310.0, 320.0, 330.0, 340.0, 350.0, 360.0, 370.0, 380.0, 390.0, 400.0]},
+  "R-1234ze":{temps:[-40, -39, -38, -37, -36, -35, -34, -33, -32, -31, -30, -29, -28, -27, -26, -25, -24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],psis:[3.8, 4.1, 4.4, 4.7, 5.0, 5.6, 6.0, 6.4, 6.8, 7.2, 8.0, 8.5, 9.0, 9.5, 10.0, 11.0, 11.6, 12.2, 12.9, 13.6, 14.9, 15.7, 16.5, 17.3, 18.2, 19.8, 20.8, 21.8, 22.9, 24.0, 26.0, 27.2, 28.5, 29.8, 31.1, 33.5, 35.0, 36.5, 38.1, 39.7, 42.6, 44.4, 46.2, 48.1, 50.0, 53.4, 55.5, 57.6, 59.8, 62.0, 65.9, 68.3, 70.8, 73.3, 75.9, 80.5, 83.3, 86.2, 89.1, 92.1, 97.2, 100.5, 103.8, 107.2, 110.6, 116.5, 120.2, 124.0, 127.8, 131.7, 138.3, 142.5, 146.8, 151.1, 155.5, 163.0, 167.6, 172.3, 177.0, 181.8, 190.1, 195.1, 200.2, 205.3, 210.5, 219.8, 225.3, 230.9, 236.5, 242.2, 252.5, 258.5, 264.6, 270.7, 276.9, 288.1, 294.6, 301.2, 307.8, 314.5, 326.7, 333.7, 340.8, 347.9, 355.1, 368.3, 375.8, 383.4, 391.0, 398.7, 412.9, 421.0, 429.2, 437.4, 445.7, 461.1, 469.8, 478.6, 487.4, 496.3, 513.0, 522.3, 531.7, 541.1, 550.6, 568.3, 578.2, 588.2, 598.2, 608.3, 627.2, 637.7, 648.3, 658.9, 669.6, 690.0, 701.1, 712.3, 723.5, 734.8, 756.7]},
+};
+const EQUIPMENT = [
+  { model: "M1078A1P2", system: "LMTV A/C", nsn: "—", refrigerant: "R-134a", capacity: 3.75 },
+];
+
+// Linear interpolation within a refrigerant's data
+function lookupPSI(refrigerant, tempF) {
+  const d = REFRIG_DATA[refrigerant];
+  if (!d) return null;
+  const temps = d.temps, psis = d.psis;
+  if (tempF < temps[0] || tempF > temps[temps.length-1]) return null;
+  // Find bracket
+  let lo = 0, hi = temps.length - 1;
+  while (lo < hi - 1) {
+    const mid = (lo + hi) >> 1;
+    if (temps[mid] <= tempF) lo = mid; else hi = mid;
+  }
+  if (temps[lo] === tempF) return psis[lo];
+  const frac = (tempF - temps[lo]) / (temps[hi] - temps[lo]);
+  return psis[lo] + frac * (psis[hi] - psis[lo]);
+}
+
+function lookupTemp(refrigerant, psi) {
+  const d = REFRIG_DATA[refrigerant];
+  if (!d) return null;
+  const temps = d.temps, psis = d.psis;
+  // Find the bracket where PSI falls (PSI is monotonically increasing)
+  let lo = 0, hi = psis.length - 1;
+  if (psi < psis[0] || psi > psis[hi]) return null;
+  while (lo < hi - 1) {
+    const mid = (lo + hi) >> 1;
+    if (psis[mid] <= psi) lo = mid; else hi = mid;
+  }
+  if (psis[lo] === psi) return temps[lo];
+  const frac = (psi - psis[lo]) / (psis[hi] - psis[lo]);
+  return temps[lo] + frac * (temps[hi] - temps[lo]);
+}
+
+function getRange(refrigerant) {
+  const d = REFRIG_DATA[refrigerant];
+  if (!d) return '';
+  return `${d.temps[0]}°F – ${d.temps[d.temps.length-1]}°F`;
+}
+
+// Theme toggle
+const root = document.documentElement;
+function toggleTheme() {
+  const current = root.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  document.getElementById('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+}
+
+// Tabs
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('visible', p.id === name + '-panel'));
+}
+
+// ── Pressure lookup ──
+let lookupMode = 'temp-to-psi'; // or 'psi-to-temp'
+
+function setMode(mode) {
+  lookupMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('tempInput').closest('.field').style.display = mode === 'temp-to-psi' ? '' : 'none';
+  document.getElementById('psiInput').closest('.field').style.display = mode === 'psi-to-temp' ? '' : 'none';
+  updateReadout('');
+  doLookup();
+}
+
+function doLookup() {
+  const ref = document.getElementById('refrigSelect').value;
+  const rangeEl = document.getElementById('lookupRange');
+  rangeEl.textContent = ref ? `Range: ${getRange(ref)}` : '';
+
+  if (!ref) { updateReadout(''); return; }
+
+  if (lookupMode === 'temp-to-psi') {
+    const raw = document.getElementById('tempInput').value;
+    if (raw === '' || raw === null) { updateReadout(''); return; }
+    const temp = parseFloat(raw);
+    const psi = lookupPSI(ref, temp);
+    if (psi === null) {
+      updateReadout('OUT', 'PSI', 'Out of range for ' + ref);
+    } else {
+      updateReadout(psi.toFixed(1), 'PSI', `At ${temp}°F · ${ref}`);
+    }
+  } else {
+    const raw = document.getElementById('psiInput').value;
+    if (raw === '' || raw === null) { updateReadout(''); return; }
+    const psi = parseFloat(raw);
+    const temp = lookupTemp(ref, psi);
+    if (temp === null) {
+      updateReadout('OUT', '°F', 'Out of range for ' + ref);
+    } else {
+      updateReadout(temp.toFixed(1), '°F', `At ${psi} PSI · ${ref}`);
+    }
+  }
+}
+
+function updateReadout(val, unit = 'PSI', sub = '') {
+  const valEl = document.getElementById('readoutValue');
+  const unitEl = document.getElementById('readoutUnit');
+  const subEl = document.getElementById('readoutSub');
+  if (val === '') {
+    valEl.textContent = '—';
+    valEl.className = 'readout-value empty';
+    unitEl.textContent = '';
+    subEl.textContent = '';
+  } else {
+    valEl.textContent = val;
+    valEl.className = 'readout-value';
+    unitEl.textContent = unit;
+    subEl.textContent = sub;
+  }
+}
+
+// ── Tank calculator ──
+function calcTank() {
+  const tankW = parseFloat(document.getElementById('tankWeight').value);
+  const tareW = parseFloat(document.getElementById('tareWeight').value);
+  const amtNeeded = parseFloat(document.getElementById('amtNeeded').value);
+  const refrigerant = document.getElementById('calcRefrig').value;
+  const tempF = parseFloat(document.getElementById('calcTemp').value);
+
+  const hasBasic = !isNaN(tankW) && !isNaN(tareW);
+  const refrigW = hasBasic ? (tankW - tareW) : NaN;
+  const leftTank = !isNaN(amtNeeded) && hasBasic ? (tankW - amtNeeded) : NaN;
+  const leftRefrig = !isNaN(amtNeeded) && !isNaN(refrigW) ? (refrigW - amtNeeded) : NaN;
+
+  document.getElementById('r-refrigW').textContent   = isNaN(refrigW)   ? '—' : refrigW.toFixed(2) + ' lbs';
+  document.getElementById('r-leftTank').textContent  = isNaN(leftTank)  ? '—' : leftTank.toFixed(2) + ' lbs';
+  document.getElementById('r-leftRefrig').textContent= isNaN(leftRefrig)? '—' : leftRefrig.toFixed(2) + ' lbs';
+
+  // Color code left-over
+  const lrEl = document.getElementById('r-leftRefrig');
+  if (!isNaN(leftRefrig)) {
+    if (leftRefrig < 0) lrEl.className = 'calc-row-value amber';
+    else lrEl.className = 'calc-row-value accent';
+  } else {
+    lrEl.className = 'calc-row-value muted';
+  }
+
+  // Optional pressure lookup
+  const psiEl = document.getElementById('r-psi');
+  if (refrigerant && !isNaN(tempF)) {
+    const psi = lookupPSI(refrigerant, tempF);
+    psiEl.textContent = psi !== null ? psi.toFixed(1) + ' PSI' : 'Out of range';
+    psiEl.className = 'calc-row-value' + (psi !== null ? ' accent' : ' muted');
+  } else {
+    psiEl.textContent = '—';
+    psiEl.className = 'calc-row-value muted';
+  }
+}
+
+// Populate refrigerant selects
+window.addEventListener('DOMContentLoaded', () => {
+  const refrigerants = Object.keys(REFRIG_DATA).sort();
+  ['refrigSelect', 'calcRefrig'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const ph = document.createElement('option');
+    ph.value = ''; ph.textContent = '— Select refrigerant —';
+    sel.appendChild(ph);
+    refrigerants.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      sel.appendChild(opt);
+    });
+  });
+
+  // Auto-detect theme
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.getElementById('themeBtn').textContent = prefersDark ? '☀️' : '🌙';
+
+  // Show first tab
+  switchTab('lookup');
+
+  // Hide PSI input by default
+  document.getElementById('psiInput').closest('.field').style.display = 'none';
+});
+</script>
+
+<!-- ── HTML ── -->
+</head>
+<body>
+<header class="site-header">
+  <div class="logo-group">
+    <span class="logo-title">Refrigerant</span>
+    <span class="logo-sub">Field Reference</span>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+</header>
+
+<!-- Detail modal -->
+<div class="modal-overlay" id="infoModal" role="dialog" aria-modal="true" onclick="handleModalOverlayClick(event)">
+  <div class="modal-box" id="infoModalBox"></div>
+</div>
+
+<nav class="tab-rail" role="tablist">
+  <button class="tab-btn" data-tab="lookup" role="tab" onclick="switchTab('lookup')">Pressure</button>
+  <button class="tab-btn" data-tab="tank"   role="tab" onclick="switchTab('tank')">Tank Calc</button>
+  <button class="tab-btn" data-tab="equip"  role="tab" onclick="switchTab('equip')">Equipment</button>
+  <button class="tab-btn" data-tab="info"   role="tab" onclick="switchTab('info')">Info</button>
+  <button class="tab-btn" data-tab="sync"   role="tab" onclick="switchTab('sync')">Sync</button>
+</nav>
+
+<!-- ════ PRESSURE LOOKUP ════ -->
+<section id="lookup-panel" class="panel" role="tabpanel">
+
+  <div class="card">
+    <div class="card-label">Mode</div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="temp-to-psi" onclick="setMode('temp-to-psi')">Temp → Pressure</button>
+      <button class="mode-btn"        data-mode="psi-to-temp" onclick="setMode('psi-to-temp')">Pressure → Temp</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Inputs</div>
+    <div class="field-group">
+      <div class="field">
+        <label for="refrigSelect">Refrigerant</label>
+        <select id="refrigSelect" onchange="doLookup()"></select>
+      </div>
+      <div class="field">
+        <label for="tempInput">Temperature (°F)</label>
+        <input type="number" id="tempInput" placeholder="e.g. 70" step="0.1" oninput="doLookup()">
+      </div>
+      <div class="field">
+        <label for="psiInput">Pressure (PSI)</label>
+        <input type="number" id="psiInput" placeholder="e.g. 150" step="0.1" oninput="doLookup()">
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="readout-label">Result</div>
+    <div class="readout-value empty" id="readoutValue">—</div>
+    <div class="readout-unit" id="readoutUnit"></div>
+    <div class="readout-range" id="readoutSub"></div>
+    <div class="readout-range" id="lookupRange"></div>
+  </div>
+
+</section>
+
+<!-- ════ TANK CALCULATOR ════ -->
+<section id="tank-panel" class="panel" role="tabpanel">
+
+  <div class="card">
+    <div class="card-label">Tank Weights</div>
+    <div class="field-group">
+      <div class="two-col">
+        <div class="field">
+          <label for="tankWeight">Current Tank Weight (lbs)</label>
+          <div class="field-hint">Weigh the tank right now, as-is</div>
+          <input type="number" id="tankWeight" placeholder="e.g. 45" step="0.1" oninput="calcTank()">
+        </div>
+        <div class="field">
+          <label for="tareWeight">Tare Weight (lbs)</label>
+          <div class="field-hint">Empty tank weight — stamped on the collar</div>
+          <input type="number" id="tareWeight" placeholder="e.g. 15" step="0.1" oninput="calcTank()">
+        </div>
+      </div>
+      <div class="field">
+        <label for="amtNeeded">Amount to Charge (lbs)</label>
+        <div class="field-hint">How much refrigerant this job requires</div>
+        <input type="number" id="amtNeeded" placeholder="e.g. 6" step="0.1" oninput="calcTank()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Optional — Cross-Reference Pressure</div>
+    <div class="field-group">
+      <div class="two-col">
+        <div class="field">
+          <label for="calcRefrig">Refrigerant</label>
+          <select id="calcRefrig" onchange="calcTank()"></select>
+        </div>
+        <div class="field">
+          <label for="calcTemp">Temperature (°F)</label>
+          <input type="number" id="calcTemp" placeholder="e.g. 70" step="0.1" oninput="calcTank()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Results</div>
+    <div class="calc-results">
+      <div class="calc-row">
+        <span class="calc-row-label">Refrigerant currently in tank<br><small style="font-size:.72em;opacity:.6">Current weight − tare weight</small></span>
+        <span class="calc-row-value accent" id="r-refrigW">—</span>
+      </div>
+      <div class="divider"></div>
+      <div class="calc-row">
+        <span class="calc-row-label">Tank scale reading after job<br><small style="font-size:.72em;opacity:.6">What the scale will show when done</small></span>
+        <span class="calc-row-value" id="r-leftTank">—</span>
+      </div>
+      <div class="calc-row">
+        <span class="calc-row-label">Refrigerant remaining after job<br><small style="font-size:.72em;opacity:.6">What's left to use on future jobs</small></span>
+        <span class="calc-row-value muted" id="r-leftRefrig">—</span>
+      </div>
+      <div class="divider"></div>
+      <div class="calc-row">
+        <span class="calc-row-label">Saturation pressure at temp</span>
+        <span class="calc-row-value muted" id="r-psi">—</span>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ════ EQUIPMENT REFERENCE ════ -->
+<section id="equip-panel" class="panel" role="tabpanel">
+
+  <!-- Add equipment form -->
+  <div class="card">
+    <div class="card-label">Add Equipment</div>
+    <div class="field-group">
+      <div class="two-col">
+        <div class="field">
+          <label for="eq-model">Model / Equipment Name</label>
+          <div class="field-hint">e.g. M1078A1P2, Kenworth T680</div>
+          <input type="text" id="eq-model" placeholder="e.g. M1078A1P2">
+        </div>
+        <div class="field">
+          <label for="eq-system">System Description</label>
+          <div class="field-hint">e.g. LMTV A/C, Cab A/C</div>
+          <input type="text" id="eq-system" placeholder="e.g. Cab A/C">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="eq-refrig">Refrigerant</label>
+          <select id="eq-refrig"></select>
+        </div>
+        <div class="field">
+          <label for="eq-capacity">System Capacity (lbs)</label>
+          <div class="field-hint">Total refrigerant charge weight</div>
+          <input type="number" id="eq-capacity" placeholder="e.g. 3.75" step="0.01" min="0">
+        </div>
+      </div>
+      <button class="add-btn" onclick="addEquipment()">＋ Add to Table</button>
+    </div>
+  </div>
+
+  <!-- Equipment table -->
+  <div class="card">
+    <div class="card-label">Vehicle Systems</div>
+    <div class="eq-table-wrap">
+      <table class="eq-table">
+        <thead>
+          <tr>
+            <th>Model / Name</th>
+            <th>System</th>
+            <th>Refrigerant</th>
+            <th>Capacity (lbs)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="equipTable"></tbody>
+      </table>
+      <p id="equip-empty" style="text-align:center;padding:18px 0;color:var(--text-3);font-size:.85rem;">No equipment added yet — use the form above.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">All Refrigerants — Coverage</div>
+    <div class="eq-table-wrap">
+      <table class="eq-table">
+        <thead>
+          <tr><th>Refrigerant</th><th>Temp Range</th><th>At 70 °F</th></tr>
+        </thead>
+        <tbody id="refrigTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</section>
+
+<section id="info-panel" class="panel" role="tabpanel">
+  <div class="card">
+    <div class="info-controls">
+      <input class="info-search" id="infoSearch" type="search" placeholder="Search refrigerant, use, or keyword…" oninput="filterInfo()">
+      <div class="filter-btns">
+        <button class="filter-btn active" data-filter="all"    onclick="setFilter(this,'all')">All</button>
+        <button class="filter-btn"        data-filter="A1"     onclick="setFilter(this,'A1')">A1 — Non-flammable</button>
+        <button class="filter-btn"        data-filter="A2L"    onclick="setFilter(this,'A2L')">A2L — Mildly flammable</button>
+        <button class="filter-btn"        data-filter="A3"     onclick="setFilter(this,'A3')">A3 — Flammable</button>
+        <button class="filter-btn"        data-filter="phaseout" onclick="setFilter(this,'phaseout')">Phase-out / Phasing-down</button>
+      </div>
+    </div>
+    <div class="info-grid" id="infoGrid"></div>
+  </div>
+</section>
+
+<!-- ════ SYNC ════ -->
+<section id="sync-panel" class="panel" role="tabpanel">
+
+  <!-- Cloud Sync Status -->
+  <div class="card">
+    <div class="card-label">Cloud Sync</div>
+    <div class="sync-blurb">
+      Equipment and update data sync through a secure cloud relay — no token or configuration needed. Just push, pull, and check for updates below.
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;font-size:.85rem;color:var(--accent)">
+      <span style="font-size:1.1em">✓</span>
+      <span>Connected to <strong>Field-Guide-to-Refrigerant</strong> repo via cloud relay</span>
+    </div>
+  </div>
+
+  <!-- Equipment Sync -->
+  <div class="card">
+    <div class="card-label">Equipment Sync</div>
+    <div class="sync-blurb">Push your equipment list up to the repo (<code style="font-family:'JetBrains Mono',monospace;font-size:.8em">data/equipment.json</code>) or pull it back down. Pull does a union merge — nothing is deleted, remote entries win on conflict.</div>
+    <div class="sync-btns">
+      <button class="add-btn" onclick="syncPushEquipment()">⬆ Push to GitHub</button>
+      <button class="add-btn" onclick="syncPullEquipment()">⬇ Pull from GitHub</button>
+    </div>
+    <div id="sync-equip-status" style="display:none;padding:10px;border-radius:6px;margin-top:10px;font-size:.85rem"></div>
+  </div>
+
+  <!-- App Update -->
+  <div class="card">
+    <div class="card-label">App Update</div>
+    <div class="sync-blurb">Checks <code style="font-family:'JetBrains Mono',monospace;font-size:.8em">version.txt</code> in the repo against this build. If a newer version is available, a download link will appear here.</div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <span style="font-size:.85rem;color:var(--text-2)">This build: <strong id="current-version-label" style="font-family:'JetBrains Mono',monospace"></strong></span>
+      <button class="add-btn" style="max-width:200px" onclick="checkForUpdate()">🔄 Check for Update</button>
+    </div>
+    <div id="sync-update-status" style="display:none;padding:10px;border-radius:6px;margin-top:10px;font-size:.85rem"></div>
+  </div>
+
+</section>
+
+<script>
+// ── Equipment persistence ──
+const DEFAULT_EQUIPMENT = [
+  { model: "M1078A1P2", system: "LMTV A/C", refrigerant: "R-134a", capacity: 3.75 }
+];
+
+function loadEquipment() {
+  try {
+    const stored = localStorage.getItem('refrig_equipment');
+    return stored ? JSON.parse(stored) : DEFAULT_EQUIPMENT;
+  } catch(e) { return DEFAULT_EQUIPMENT; }
+}
+
+function saveEquipment(list) {
+  try { localStorage.setItem('refrig_equipment', JSON.stringify(list)); } catch(e) {}
+}
+
+function renderEquipTable() {
+  const list = loadEquipment();
+  const tbody = document.getElementById('equipTable');
+  const empty = document.getElementById('equip-empty');
+  tbody.innerHTML = '';
+  empty.hidden = list.length > 0;
+  list.forEach((item, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escHtml(item.model)}</td>
+      <td>${escHtml(item.system)}</td>
+      <td><span class="refrig-tag">${escHtml(item.refrigerant)}</span></td>
+      <td>${item.capacity}</td>
+      <td><button class="del-btn" onclick="deleteEquipment(${idx})" title="Remove">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function addEquipment() {
+  const model    = document.getElementById('eq-model').value.trim();
+  const system   = document.getElementById('eq-system').value.trim();
+  const refrig   = document.getElementById('eq-refrig').value;
+  const capacity = parseFloat(document.getElementById('eq-capacity').value);
+
+  if (!model)    { flash('eq-model',    'Please enter a model or equipment name.'); return; }
+  if (!system)   { flash('eq-system',   'Please enter a system description.'); return; }
+  if (!refrig)   { flash('eq-refrig',   'Please select a refrigerant.'); return; }
+  if (isNaN(capacity) || capacity <= 0) { flash('eq-capacity', 'Please enter a valid capacity.'); return; }
+
+  const list = loadEquipment();
+  list.push({ model, system, refrigerant: refrig, capacity });
+  saveEquipment(list);
+  renderEquipTable();
+  updateInfoEquipment();
+
+  // Clear inputs
+  document.getElementById('eq-model').value    = '';
+  document.getElementById('eq-system').value   = '';
+  document.getElementById('eq-capacity').value = '';
+  document.getElementById('eq-refrig').value   = '';
+}
+
+function deleteEquipment(idx) {
+  const list = loadEquipment();
+  list.splice(idx, 1);
+  saveEquipment(list);
+  renderEquipTable();
+  updateInfoEquipment();
+}
+
+// ── Cloud Sync (via Cloudflare Worker proxy) ──
+const APP_VERSION  = '1.0';
+const WORKER_URL   = 'https://refrig-sync.fbyhbkb2dt.workers.dev';
+
+function showSyncStatus(elId, msg, type) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.style.display = '';
+  if (type === 'ok')   { el.style.background='var(--accent-dim)'; el.style.color='var(--accent)';  el.style.border='1px solid var(--accent)'; el.style.borderRadius='6px'; }
+  if (type === 'err')  { el.style.background='#C0392B22';          el.style.color='var(--danger)'; el.style.border='1px solid var(--danger)'; el.style.borderRadius='6px'; }
+  if (type === 'info') { el.style.background='var(--amber-bg)';    el.style.color='var(--amber)';  el.style.border='1px solid var(--amber)'; el.style.borderRadius='6px'; }
+  el.innerHTML = msg;
+}
+
+async function syncPushEquipment() {
+  showSyncStatus('sync-equip-status', 'Pushing to GitHub…', 'info');
+  try {
+    const list = loadEquipment();
+    const res  = await fetch(WORKER_URL + '/equipment', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(list)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
+    showSyncStatus('sync-equip-status', '✓ Pushed ' + list.length + ' item(s) to the repo.', 'ok');
+  } catch(e) {
+    showSyncStatus('sync-equip-status', 'Error: ' + e.message, 'err');
+  }
+}
+
+async function syncPullEquipment() {
+  showSyncStatus('sync-equip-status', 'Pulling from GitHub…', 'info');
+  try {
+    const res = await fetch(WORKER_URL + '/equipment');
+    if (!res.ok) { const d = await res.json(); throw new Error(d.error || res.status); }
+    const remote = await res.json();
+    if (!remote.length) { showSyncStatus('sync-equip-status', 'No equipment in the repo yet — Push first.', 'info'); return; }
+    const local = loadEquipment();
+    const map = new Map();
+    local.forEach(e  => map.set(e.model + '|' + e.system + '|' + e.refrigerant, e));
+    remote.forEach(e => map.set(e.model + '|' + e.system + '|' + e.refrigerant, e));
+    const merged = Array.from(map.values());
+    saveEquipment(merged);
+    renderEquipTable();
+    updateInfoEquipment();
+    showSyncStatus('sync-equip-status', '✓ Merged — ' + merged.length + ' total item(s) (' + remote.length + ' from repo, ' + local.length + ' were local).', 'ok');
+  } catch(e) {
+    showSyncStatus('sync-equip-status', 'Error: ' + e.message, 'err');
+  }
+}
+
+async function checkForUpdate() {
+  showSyncStatus('sync-update-status', 'Checking for updates…', 'info');
+  try {
+    const res    = await fetch(WORKER_URL + '/version');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const latest  = (await res.text()).trim();
+    const current = APP_VERSION;
+    if (latest === current) {
+      showSyncStatus('sync-update-status', '✓ You are on the latest version (' + current + ').', 'ok');
+    } else {
+      const apkUrl = 'https://github.com/Seyruz-Glitch/Field-Guide-to-Refrigerant/releases/download/v'
+                   + latest + '/RefrigerantTool-v' + latest + '.apk';
+      const isAndroid = typeof Android !== 'undefined';
+      showSyncStatus('sync-update-status',
+        '⚠ Update available! Latest: <strong>' + latest + '</strong> — You have: <strong>' + current + '</strong>.<br><br>' +
+        (isAndroid
+          ? '<button class="add-btn" style="margin-top:4px" onclick="triggerApkInstall(\'' + apkUrl + '\',\'' + latest + '\')">⬇ Download & Install v' + latest + '</button>'
+          : 'Download <code>RefrigerantTool-v' + latest + '.exe</code> from the repo\'s <strong>Releases</strong> tab.'),
+        'err');
+    }
+  } catch(e) {
+    showSyncStatus('sync-update-status', 'Error: ' + e.message, 'err');
+  }
+}
+
+function triggerApkInstall(url, version) {
+  showSyncStatus('sync-update-status', '⏳ Downloading v' + version + '… this may take a moment.', 'info');
+  window._apkStatus = function(state, msg) {
+    if (state === 'downloading') {
+      showSyncStatus('sync-update-status', '⏳ Downloading… please wait.', 'info');
+    } else if (state === 'installing') {
+      showSyncStatus('sync-update-status', '✓ Download complete — follow the installer prompt.', 'ok');
+    } else if (state === 'error') {
+      showSyncStatus('sync-update-status', '✗ Download failed: ' + (msg || 'unknown error'), 'err');
+    }
+  };
+  Android.downloadAndInstall(url);
+}
+
+function flash(id, msg) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--danger)';
+  el.title = msg;
+  el.focus();
+  setTimeout(() => { el.style.borderColor = ''; el.title = ''; }, 2000);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Refrigerant Info data ──
+const REFRIG_INFO = {
+  "R-22":     { type:"HCFC",          gwp:1810,  odp:0.055, safety:"A1",  status:"phased-out",
+    uses:["Residential & commercial AC","Heat pumps","Medium-temp commercial refrigeration"],
+    replaces:[], replacedBy:["R-407C","R-410A (new systems)","R-422D","R-438A (retrofits)"],
+    notes:"Production banned in the US as of 2020. Existing equipment may use reclaimed or recycled R-22. Compatible with mineral oil (MO) or alkylbenzene (AB) oil." },
+  "R-134a":   { type:"HFC",           gwp:1430,  odp:0,     safety:"A1",  status:"phasing-down",
+    uses:["Automotive AC","Medium-temp commercial refrigeration","Centrifugal chillers"],
+    replaces:["R-12"], replacedBy:["R-1234yf (automotive)","R-513A (commercial)","R-516A (chillers)"],
+    notes:"Being phased out of automotive use globally. Still widely used in commercial refrigeration. Requires polyolester (POE) oil or PAG oil (automotive)." },
+  "R-290":    { type:"Hydrocarbon",   gwp:3,     odp:0,     safety:"A3",  status:"current",
+    uses:["Small domestic refrigerators","Vending machines","Plug-in display cases","Ice cream freezers"],
+    replaces:["R-22","R-404A (small systems)"], replacedBy:[],
+    notes:"Propane. Extremely low GWP and excellent efficiency. Flammable — limited to small charge sizes (typically <150 g / 5.3 oz). Requires A3-rated equipment and trained technicians." },
+  "R-404a":   { type:"HFC Blend",     gwp:3922,  odp:0,     safety:"A1",  status:"phasing-down",
+    uses:["Low-temp commercial refrigeration","Frozen food display cases","Cold storage warehouses","Blast freezers"],
+    replaces:["R-502"], replacedBy:["R-449A","R-448A","R-452A"],
+    notes:"Very high GWP — being aggressively phased down under the AIM Act. Many states have restricted new equipment charged with R-404A. Retrofit to lower-GWP alternatives strongly recommended. Requires POE oil." },
+  "R-407c":   { type:"HFC Blend",     gwp:1774,  odp:0,     safety:"A1",  status:"current",
+    uses:["Residential & commercial AC","Heat pumps","Chillers"],
+    replaces:["R-22"], replacedBy:["R-32","R-454B"],
+    notes:"Zeotropic blend with ~10°F temperature glide. Designed as R-22 replacement for new equipment — not a drop-in retrofit. Requires POE oil. Pressure-temperature differs from R-22." },
+  "R-407f":   { type:"HFC Blend",     gwp:1825,  odp:0,     safety:"A1",  status:"current",
+    uses:["Medium and low-temp commercial refrigeration","Supermarket systems"],
+    replaces:["R-404A","R-507A"], replacedBy:["R-449A","R-448A"],
+    notes:"Higher efficiency than R-404A for medium-temp applications. Some capacity reduction at low temps. Good bridge option during transition to lower-GWP refrigerants. Requires POE oil." },
+  "R-410a":   { type:"HFC Blend",     gwp:2088,  odp:0,     safety:"A1",  status:"phasing-down",
+    uses:["Residential AC & heat pumps","Light commercial AC","Mini-splits"],
+    replaces:["R-22"], replacedBy:["R-454B","R-32"],
+    notes:"Dominant refrigerant for residential HVAC ~2010–2025. Operates at significantly higher pressures than R-22. New residential systems transitioning to R-454B and R-32 per AIM Act (effective 2025). Requires POE oil." },
+  "R-417a":   { type:"HFC Blend",     gwp:2346,  odp:0,     safety:"A1",  status:"current",
+    uses:["R-22 AC retrofit","R-22 heat pump retrofit","Medium-temp refrigeration retrofit"],
+    replaces:["R-22"], replacedBy:[],
+    notes:"Near-drop-in retrofit for R-22. Compatible with existing mineral oil or alkylbenzene oil in most cases — no oil change required. Some capacity loss at high ambient temperatures. Recharge by weight, not pressure." },
+  "R-422a":   { type:"HFC Blend",     gwp:3143,  odp:0,     safety:"A1",  status:"current",
+    uses:["R-22 medium-temp refrigeration retrofit","R-22 AC retrofit"],
+    replaces:["R-22"], replacedBy:[],
+    notes:"Near-drop-in retrofit for R-22. Compatible with existing mineral oil. Similar pressures to R-22. Higher GWP than most other R-22 retrofit options. Recharge by weight." },
+  "R-454B":   { type:"HFO Blend",     gwp:466,   odp:0,     safety:"A2L", status:"current",
+    uses:["Residential AC & heat pumps","Light commercial AC","Mini-splits"],
+    replaces:["R-410A"], replacedBy:[],
+    notes:"Marketed as Opteon XL41. Primary R-410A replacement for new US residential equipment (AIM Act). Mildly flammable (A2L) — requires A2L-rated equipment, leak detectors, and updated installation practices. Significantly lower GWP than R-410A." },
+  "R-507a":   { type:"HFC Blend",     gwp:3985,  odp:0,     safety:"A1",  status:"phasing-down",
+    uses:["Low-temp commercial refrigeration","Frozen food storage","Blast freezers","Transport refrigeration"],
+    replaces:["R-502"], replacedBy:["R-449A","R-448A","R-452A"],
+    notes:"Azeotropic blend (no temperature glide) — well-suited for direct expansion systems. Very high GWP; aggressively phased down under AIM Act. Excellent low-temp performance. Requires POE oil." },
+  "R-516a":   { type:"HFO Blend",     gwp:130,   odp:0,     safety:"A2L", status:"current",
+    uses:["Centrifugal chillers","Screw chillers","Medium-temp commercial refrigeration"],
+    replaces:["R-134a"], replacedBy:[],
+    notes:"Low-GWP replacement for R-134a in chillers and commercial refrigeration. Mildly flammable (A2L) — requires equipment designed or retrofitted to handle A2L refrigerants. EPA SNAP approved." },
+  "R-32":     { type:"HFC",           gwp:675,   odp:0,     safety:"A2L", status:"current",
+    uses:["Residential split AC","Mini-splits","Heat pumps"],
+    replaces:["R-410A"], replacedBy:[],
+    notes:"Single-component refrigerant (not a blend). Widely used in Asia and Europe; growing US adoption. Higher efficiency and lower GWP than R-410A. Mildly flammable (A2L). Also a component in R-410A and R-454B blends." },
+  "R-1234yf": { type:"HFO",           gwp:4,     odp:0,     safety:"A2L", status:"current",
+    uses:["Automotive AC (new vehicles)","Light commercial AC"],
+    replaces:["R-134a"], replacedBy:[],
+    notes:"Near-zero GWP. Required in new EU vehicles since 2017; mandatory in increasing number of US new vehicles. Uses different PAG oil from R-134a. Requires unique fittings to prevent cross-contamination with R-134a." },
+  "R-449A":   { type:"HFO/HFC Blend", gwp:1397,  odp:0,     safety:"A1",  status:"current",
+    uses:["Medium & low-temp commercial refrigeration","Supermarket systems","Cold storage"],
+    replaces:["R-404A","R-507A"], replacedBy:[],
+    notes:"Marketed as Opteon XP40. EPA SNAP approved. Non-flammable (A1) — good retrofit for R-404A systems with minimal modifications needed. Similar operating pressures to R-404A. Requires POE oil." },
+  "R-422D":   { type:"HFC Blend",     gwp:2729,  odp:0,     safety:"A1",  status:"current",
+    uses:["R-22 AC retrofit","R-22 medium-temp refrigeration retrofit"],
+    replaces:["R-22"], replacedBy:[],
+    notes:"Near-drop-in retrofit for R-22. Compatible with existing mineral oil or alkylbenzene oil — no oil change required in most cases. Similar operating pressures to R-22. One of the most common R-22 field retrofits." },
+  "R-448A":   { type:"HFO/HFC Blend", gwp:1387,  odp:0,     safety:"A1",  status:"current",
+    uses:["Low-temp commercial refrigeration","Supermarket frozen cases","Cold storage warehouses"],
+    replaces:["R-404A","R-507A"], replacedBy:[],
+    notes:"Marketed as Solstice N40. EPA SNAP approved. Non-flammable (A1). Particularly well-suited for low-temperature supermarket applications. Better energy efficiency than R-404A. Requires POE oil." },
+  "R-438A":   { type:"HFC Blend",     gwp:2265,  odp:0,     safety:"A1",  status:"current",
+    uses:["R-22 AC retrofit","R-22 refrigeration retrofit"],
+    replaces:["R-22"], replacedBy:[],
+    notes:"Marketed as MO99. Near-drop-in retrofit for R-22. Can use existing mineral oil — no oil change required. Very similar pressures to R-22. Popular field choice due to minimal system modification required." },
+  "R-1234ze": { type:"HFO",           gwp:7,     odp:0,     safety:"A2L", status:"current",
+    uses:["Large centrifugal chillers","Industrial refrigeration","District cooling"],
+    replaces:["R-134a"], replacedBy:[],
+    notes:"Very low GWP. Used primarily in large-tonnage centrifugal chillers where its lower operating pressure is an advantage. Mildly flammable (A2L). Requires equipment designed or approved for its use." }
+};
+
+// Extended detail data keyed to match REFRIG_INFO
+const REFRIG_DETAIL = {
+  "R-22":     { oil:"Mineral Oil (MO) or Alkylbenzene (AB)", bp:-41.4, cylinder:"Light Green",
+    brands:["Freon 22","Genetron 22","SUVA 22","Forane 22"],
+    handling:"Recovery required before service — no venting. Cylinders are light green. Compatible with MO and AB oil; POE not required. Being phased out: use reclaimed stock only on existing equipment." },
+  "R-134a":   { oil:"Polyolester (POE) — automotive uses PAG", bp:-15.1, cylinder:"Light Blue",
+    brands:["Freon 134a","SUVA 134a","Genetron 134a","Forane 134a"],
+    handling:"Cylinders: light blue. NOT compatible with mineral oil — use POE. Automotive systems use PAG oil. Incompatible fittings with R-12 prevent cross-contamination. Dedicated gauges recommended to avoid moisture contamination." },
+  "R-290":    { oil:"Mineral Oil (MO) or Polyolester (POE)", bp:-43.7, cylinder:"Orange (varies)",
+    brands:["Propane (industrial grade)"],
+    handling:"⚠ FLAMMABLE (A3). Use only sparkless, intrinsically safe tools and recovery equipment. No open flames. Charge sizes typically limited to 150 g (5.3 oz). Technician must be trained for flammable refrigerant handling. Post flammability warnings at equipment." },
+  "R-404a":   { oil:"Polyolester (POE) only", bp:-51.4, cylinder:"Orange",
+    brands:["SUVA 404A","Genetron 404A","HP-62","Forane 404A"],
+    handling:"Cylinders: orange. Must use POE oil. High GWP — plan retrofit path. Charge as liquid. Azeotrope-like behavior (minimal glide). Restricted or banned in new equipment in several US states." },
+  "R-407c":   { oil:"Polyolester (POE) only", bp:-46.4, cylinder:"Brown (Chocolate)",
+    brands:["SUVA 407C","Genetron 407C","Forane 407C"],
+    handling:"Cylinders: brown/chocolate. Zeotropic blend with ~10°F temperature glide — always charge as LIQUID from the cylinder. Never top off a partial charge; recover and recharge by weight. Requires POE oil. Pressure-temperature differs significantly from R-22." },
+  "R-407f":   { oil:"Polyolester (POE) only", bp:-47.7, cylinder:"Blue-Green (varies)",
+    brands:["Genetron 407F","Forane 407F","Performax LT"],
+    handling:"Zeotropic blend — charge as liquid. POE oil required. Designed for medium-temp retrofit of R-404A; some capacity reduction at low temps. Blending with other refrigerants prohibited." },
+  "R-410a":   { oil:"Polyolester (POE) only", bp:-60.9, cylinder:"Rose / Pink",
+    brands:["Puron","SUVA 410A","Genetron 410A","Forane 410A","AZ-20"],
+    handling:"Cylinders: rose/pink. Operates at very high pressures (~400+ PSI at 100°F). Requires high-pressure rated hoses, gauges, and recovery equipment. POE oil only. Charge as liquid. Phase-out underway — new equipment using R-454B." },
+  "R-417a":   { oil:"Mineral Oil (MO), Alkylbenzene (AB), or POE", bp:-33.5, cylinder:"Green/Yellow (varies)",
+    brands:["ISCEON MO59","Forane 417A","RS-44b"],
+    handling:"Near-drop-in retrofit for R-22. Retain existing MO or AB oil in most cases (flush recommended if heavily contaminated). Charge as liquid by weight. Some capacity loss at high ambient temps. Not interchangeable with R-22 on pressure alone." },
+  "R-422a":   { oil:"Mineral Oil (MO) or Polyolester (POE)", bp:-47.3, cylinder:"Varies",
+    brands:["ISCEON MO79","Forane 422A","WA-50"],
+    handling:"Near-drop-in retrofit for R-22. Compatible with MO oil — oil change not required in most cases. Charge as liquid by weight. Similar suction pressures to R-22; slightly higher discharge." },
+  "R-454B":   { oil:"Polyolester (POE) only", bp:-63.0, cylinder:"Light Blue / Gray stripe",
+    brands:["Opteon XL41","Puron Advance (Carrier branding)"],
+    handling:"⚠ MILDLY FLAMMABLE (A2L). Requires A2L-certified equipment — do not use in systems not rated for A2L refrigerants. Leak detectors required in mechanical rooms per ASHRAE 15. Follow A2L handling procedures. Higher pressure than R-410A. POE oil only." },
+  "R-507a":   { oil:"Polyolester (POE) only", bp:-52.1, cylinder:"Teal / Teal-Green",
+    brands:["SUVA 507","Genetron AZ-50","Forane 507"],
+    handling:"Cylinders: teal. Azeotrope — no temperature glide; can charge as vapor or liquid. POE oil required. Very high GWP — plan retrofit. Excellent stability at low temps. Widely used in military and transport refrigeration." },
+  "R-516a":   { oil:"Polyolester (POE) only", bp:-13.0, cylinder:"Varies",
+    brands:["Opteon XP10"],
+    handling:"⚠ MILDLY FLAMMABLE (A2L). Requires A2L-rated equipment. EPA SNAP approved for medium-temp commercial refrigeration. POE oil required. Good replacement for R-134a in chillers without major system modifications." },
+  "R-32":     { oil:"Polyolester (POE) only", bp:-61.2, cylinder:"Blue",
+    brands:["Difluoromethane","Puron Advance (component)"],
+    handling:"⚠ MILDLY FLAMMABLE (A2L). Requires A2L-rated equipment. Higher discharge temperatures than R-410A — verify compressor and oil compatibility. Dominant refrigerant in Asia/Europe mini-splits. Key component of R-410A and R-454B blends." },
+  "R-1234yf": { oil:"PAG (automotive) or POE", bp:-29.4, cylinder:"Varies (often Blue-Gray)",
+    brands:["Opteon YF","Solstice YF"],
+    handling:"⚠ MILDLY FLAMMABLE (A2L). Automotive systems use unique quick-connect fittings to prevent mix-up with R-134a. Dedicated recovery/recharge equipment required. Not compatible with R-134a manifold sets. Use only R-1234yf rated PAG oil in automotive systems." },
+  "R-449A":   { oil:"Polyolester (POE) only", bp:-46.5, cylinder:"Varies",
+    brands:["Opteon XP40"],
+    handling:"Non-flammable A1 — safer to handle than A2L alternatives. Flush system and replace with POE oil when retrofitting from R-404A with MO. EPA SNAP approved. Charge as liquid. Similar pressures to R-404A. Widely EPA and CARB accepted." },
+  "R-422D":   { oil:"Mineral Oil (MO) or Alkylbenzene (AB)", bp:-40.7, cylinder:"Varies",
+    brands:["ISCEON MO29","Forane 422D"],
+    handling:"Near-drop-in retrofit for R-22 in AC and medium-temp refrigeration. Retain existing MO or AB oil — no flush required in most cases. Very similar operating pressures to R-22. Charge as liquid by weight. One of the most widely used R-22 field retrofits." },
+  "R-448A":   { oil:"Polyolester (POE) only", bp:-48.5, cylinder:"Varies",
+    brands:["Solstice N40"],
+    handling:"Non-flammable A1. Flush existing MO/AB oil and replace with POE when retrofitting from R-404A/R-507A. EPA SNAP approved. Particularly effective in low-temp supermarket cases. Charge as liquid. Good energy efficiency improvement over R-404A." },
+  "R-438A":   { oil:"Mineral Oil (MO) compatible — no flush required", bp:-42.3, cylinder:"Varies",
+    brands:["MO99","ISCEON MO99"],
+    handling:"Near-drop-in retrofit for R-22. Retain existing mineral oil — no oil change or flush required. Pressures very similar to R-22. Popular choice for R-22 retrofits with minimal downtime. Charge as liquid by weight." },
+  "R-1234ze": { oil:"Polyolester (POE) only", bp:-6.9, cylinder:"Varies",
+    brands:["Solstice ze","Opteon XP10 (as component)"],
+    handling:"⚠ MILDLY FLAMMABLE (A2L). Primarily used in large-tonnage centrifugal chillers. Lower operating pressure than R-134a in centrifugal applications. Requires equipment designed or manufacturer-approved for R-1234ze. POE oil required." }
+};
+
+// Expand common acronyms in text
+const ACRONYMS = {
+  'GWP':   'Global Warming Potential',
+  'ODP':   'Ozone Depletion Potential',
+  'POE':   'Polyolester (POE)',
+  'MO':    'Mineral Oil (MO)',
+  'AB':    'Alkylbenzene (AB)',
+  'PAG':   'Polyalkylene Glycol (PAG)',
+  'EPA':   'U.S. Environmental Protection Agency',
+  'SNAP':  'Significant New Alternatives Policy',
+  'AIM Act': 'American Innovation and Manufacturing Act',
+  'ASHRAE': 'American Society of Heating, Refrigerating and Air-Conditioning Engineers',
+  'CARB':  'California Air Resources Board',
+  'HFC':   'Hydrofluorocarbon',
+  'HCFC':  'Hydrochlorofluorocarbon',
+  'HFO':   'Hydrofluoroolefin',
+  'HC':    'Hydrocarbon',
+};
+
+const TYPE_FULL = {
+  'HFC':          'HFC — Hydrofluorocarbon',
+  'HCFC':         'HCFC — Hydrochlorofluorocarbon',
+  'HFO':          'HFO — Hydrofluoroolefin',
+  'Hydrocarbon':  'Hydrocarbon (HC)',
+  'HFC Blend':    'HFC Blend — Hydrofluorocarbon',
+  'HFO Blend':    'HFO Blend — Hydrofluoroolefin',
+  'HFO/HFC Blend':'HFO/HFC Blend',
+};
+
+const SAFETY_FULL = {
+  'A1':  'A1 — Non-toxic, Non-flammable',
+  'A2L': 'A2L — Non-toxic, Mildly Flammable',
+  'A3':  'A3 — Non-toxic, Flammable',
+};
+
+// ── Modal functions ──
+function openInfoModal(name) {
+  const d   = REFRIG_INFO[name];
+  const det = REFRIG_DETAIL[name] || {};
+  const box = document.getElementById('infoModalBox');
+
+  const safetyClass =
+    d.safety === 'A1'  ? 'badge-a1'  :
+    d.safety === 'A2L' ? 'badge-a2l' : 'badge-a3';
+  const statusBadge =
+    d.status === 'phased-out'   ? '<span class="badge badge-out">⛔ Phased Out</span>' :
+    d.status === 'phasing-down' ? '<span class="badge badge-phased">⚠ Phasing Down</span>' : '';
+  const gwpColor = d.gwp >= 2000 ? 'color:var(--danger)' : d.gwp >= 750 ? 'color:var(--amber)' : 'color:var(--accent)';
+
+  const warnHtml = (d.safety !== 'A1')
+    ? `<div class="modal-warn">⚠ ${d.safety === 'A2L'
+        ? 'Mildly Flammable (A2L) — lower flammability limit ≥3.5%, low heat of combustion. Use A2L-rated equipment and follow flammable refrigerant handling procedures.'
+        : 'Flammable (A3) — requires sparkless tools, intrinsically safe recovery equipment, and strict charge-size limits.'}</div>`
+    : '';
+
+  const brandsHtml = (det.brands||[]).length
+    ? `<div class="modal-section">
+        <div class="modal-section-title">Trade Names / Brands</div>
+        <div class="modal-tags">${det.brands.map(b=>`<span class="refrig-tag">${escHtml(b)}</span>`).join('')}</div>
+       </div>` : '';
+
+  const equipMatches = loadEquipment().filter(e => e.refrigerant === name);
+  const equipHtml = equipMatches.length
+    ? `<div class="modal-section">
+        <div class="modal-section-title">Your Equipment Using This Refrigerant</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${equipMatches.map(e => `
+            <div style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border-soft);border-radius:8px;padding:9px 13px;flex-wrap:wrap;gap:4px">
+              <span style="font-weight:700;color:var(--text-1);font-family:'Rajdhani',sans-serif;font-size:1.05rem">${escHtml(e.model)}</span>
+              <span style="font-size:.8rem;color:var(--text-2)">${escHtml(e.system)}</span>
+              <span style="font-size:.78rem;color:var(--text-3);font-family:'JetBrains Mono',monospace">${e.capacity} lbs</span>
+            </div>`).join('')}
+        </div>
+       </div><hr class="modal-divider">` : '';
+
+  const replHtml = d.replaces.length
+    ? `<div class="modal-section">
+        <div class="modal-section-title">Replaces</div>
+        <div class="modal-tags">${d.replaces.map(r=>`<span class="refrig-tag">${escHtml(r)}</span>`).join('')}</div>
+       </div>` : '';
+
+  const replByHtml = d.replacedBy.length
+    ? `<div class="modal-section">
+        <div class="modal-section-title">Replaced / Succeeded By</div>
+        <div class="modal-tags">${d.replacedBy.map(r=>`<span class="refrig-tag">${escHtml(r)}</span>`).join('')}</div>
+       </div>` : '';
+
+  box.innerHTML = `
+    <button class="modal-close" onclick="closeInfoModal()" title="Close">✕</button>
+    <div class="modal-name">${escHtml(name)}</div>
+    <div class="modal-badges">
+      <span class="badge badge-type">${escHtml(TYPE_FULL[d.type] || d.type)}</span>
+      <span class="badge ${safetyClass}">${escHtml(SAFETY_FULL[d.safety] || d.safety)}</span>
+      ${statusBadge}
+    </div>
+    ${warnHtml}
+    <div class="modal-specs">
+      <div class="modal-spec">
+        <span class="modal-spec-label">GWP</span>
+        <span class="modal-spec-value" style="${gwpColor}">${d.gwp.toLocaleString()}</span>
+        <span class="modal-spec-sub">Global Warming Potential<br>(vs. CO₂ = 1, 100-yr)</span>
+      </div>
+      <div class="modal-spec">
+        <span class="modal-spec-label">ODP</span>
+        <span class="modal-spec-value">${d.odp}</span>
+        <span class="modal-spec-sub">Ozone Depletion Potential<br>(vs. R-11 = 1.0)</span>
+      </div>
+      <div class="modal-spec">
+        <span class="modal-spec-label">ASHRAE Safety</span>
+        <span class="modal-spec-value">${escHtml(d.safety)}</span>
+        <span class="modal-spec-sub">Toxicity (A=low) +<br>Flammability (1–3)</span>
+      </div>
+      ${det.bp !== undefined ? `<div class="modal-spec">
+        <span class="modal-spec-label">Boiling Point</span>
+        <span class="modal-spec-value">${det.bp}°F</span>
+        <span class="modal-spec-sub">At atmospheric pressure<br>(14.7 psia)</span>
+      </div>` : ''}
+      ${det.cylinder ? `<div class="modal-spec" style="grid-column:span 2">
+        <span class="modal-spec-label">Cylinder Color (ASHRAE)</span>
+        <span class="modal-spec-value" style="font-size:.82rem">${escHtml(det.cylinder)}</span>
+        <span class="modal-spec-sub">Standard color code per ASHRAE 34</span>
+      </div>` : ''}
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Primary Applications</div>
+      <div class="modal-uses">${d.uses.map(u=>`<span class="modal-use-item">${escHtml(u)}</span>`).join('')}</div>
+    </div>
+    ${equipHtml}
+    ${replHtml}
+    ${replByHtml}
+    ${brandsHtml}
+    <hr class="modal-divider">
+    ${det.oil ? `<div class="modal-section">
+      <div class="modal-section-title">Required Lubricant Oil</div>
+      <div class="modal-note" style="border-left-color:var(--accent)">${escHtml(det.oil)}
+        <div style="margin-top:6px;font-size:.75rem;color:var(--text-3)">
+          POE = Polyolester &nbsp;·&nbsp; MO = Mineral Oil &nbsp;·&nbsp; AB = Alkylbenzene &nbsp;·&nbsp; PAG = Polyalkylene Glycol
+        </div>
+      </div>
+    </div>` : ''}
+    ${det.handling ? `<div class="modal-section">
+      <div class="modal-section-title">Field Notes &amp; Handling</div>
+      <div class="modal-note">${escHtml(det.handling)}</div>
+    </div>` : ''}
+    <div class="modal-section">
+      <div class="modal-section-title">Overview</div>
+      <div class="modal-note" style="border-left-color:var(--border)">${escHtml(d.notes)}</div>
+    </div>
+  `;
+
+  document.getElementById('infoModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeInfoModal() {
+  document.getElementById('infoModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleModalOverlayClick(e) {
+  if (e.target === document.getElementById('infoModal')) closeInfoModal();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeInfoModal();
+});
+
+let infoFilterActive = 'all';
+
+function setFilter(btn, val) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  infoFilterActive = val;
+  filterInfo();
+}
+
+function filterInfo() {
+  const q = (document.getElementById('infoSearch').value || '').toLowerCase();
+  document.querySelectorAll('.info-card').forEach(card => {
+    const name   = card.dataset.name.toLowerCase();
+    const safety = card.dataset.safety;
+    const status = card.dataset.status;
+    const text   = card.dataset.searchtext;
+
+    const matchFilter =
+      infoFilterActive === 'all' ? true :
+      infoFilterActive === 'A1'  ? safety === 'A1' :
+      infoFilterActive === 'A2L' ? safety === 'A2L' :
+      infoFilterActive === 'A3'  ? safety === 'A3' :
+      infoFilterActive === 'phaseout' ? (status === 'phased-out' || status === 'phasing-down') : true;
+
+    const matchSearch = !q || name.includes(q) || text.includes(q);
+    card.hidden = !(matchFilter && matchSearch);
+  });
+}
+
+function buildInfoGrid() {
+  const grid = document.getElementById('infoGrid');
+  Object.entries(REFRIG_INFO).forEach(([name, d]) => {
+    const safetyClass =
+      d.safety === 'A1'  ? 'badge-a1' :
+      d.safety === 'A2L' ? 'badge-a2l' : 'badge-a3';
+    const statusBadge =
+      d.status === 'phased-out'    ? '<span class="badge badge-out">⛔ Phased Out</span>' :
+      d.status === 'phasing-down'  ? '<span class="badge badge-phased">⚠ Phasing Down</span>' : '';
+
+    const gwpColor = d.gwp >= 2000 ? 'color:var(--danger)' : d.gwp >= 750 ? 'color:var(--amber)' : 'color:var(--accent)';
+
+    const usesHtml = d.uses.map(u => `<span class="info-use-item">${escHtml(u)}</span>`).join('');
+    const replHtml = d.replaces.map(r => `<span class="refrig-tag">${escHtml(r)}</span>`).join('');
+    const replByHtml = d.replacedBy.map(r => `<span class="refrig-tag">${escHtml(r)}</span>`).join('');
+
+    const card = document.createElement('div');
+    card.className = 'info-card';
+    card.dataset.name = name;
+    card.dataset.safety = d.safety;
+    card.dataset.status = d.status;
+    card.dataset.searchtext = [name, d.type, d.notes, ...d.uses, ...d.replaces, ...d.replacedBy].join(' ').toLowerCase();
+
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+
+    card.innerHTML = `
+      <div class="info-card-head">
+        <div class="info-name">${escHtml(name)}</div>
+        <div class="info-badges">
+          <span class="badge badge-type">${escHtml(d.type)}</span>
+          <span class="badge ${safetyClass}">${escHtml(d.safety)}</span>
+          ${statusBadge}
+        </div>
+      </div>
+      <div class="info-meta">
+        <div class="info-meta-item">
+          <span class="info-meta-label">GWP</span>
+          <span class="info-meta-value" style="${gwpColor}">${d.gwp.toLocaleString()}</span>
+        </div>
+        <div class="info-meta-item">
+          <span class="info-meta-label">ODP</span>
+          <span class="info-meta-value">${d.odp}</span>
+        </div>
+        <div class="info-meta-item">
+          <span class="info-meta-label">Safety Class</span>
+          <span class="info-meta-value">${escHtml(d.safety)}</span>
+        </div>
+      </div>
+      <div>
+        <div class="info-section-label">Primary Uses</div>
+        <div class="info-uses">${usesHtml}</div>
+      </div>
+      ${replHtml ? `<div><div class="info-section-label">Replaces</div><div class="info-refrig-links">${replHtml}</div></div>` : ''}
+      ${replByHtml ? `<div><div class="info-section-label">Replaced By</div><div class="info-refrig-links">${replByHtml}</div></div>` : ''}
+      <div class="info-notes">${escHtml(d.notes)}</div>
+      <div class="info-card-equip" id="ice-${escHtml(name.replace(/[^a-zA-Z0-9]/g,'_'))}" style="display:none"></div>
+      <div class="info-card-click-hint">Tap for full details →</div>
+    `;
+    // Add click + keyboard handlers AFTER innerHTML so they're always present
+    card.addEventListener('click', () => openInfoModal(name));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInfoModal(name); } });
+    grid.appendChild(card);
+  });
+  updateInfoEquipment();
+}
+
+// Refresh equipment badges on all info cards — called after any equip change
+function updateInfoEquipment() {
+  const all = loadEquipment();
+  Object.keys(REFRIG_INFO).forEach(name => {
+    const el = document.getElementById('ice-' + name.replace(/[^a-zA-Z0-9]/g,'_'));
+    if (!el) return;
+    const matches = all.filter(e => e.refrigerant === name);
+    if (!matches.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.innerHTML = `
+      <div class="info-section-label" style="margin-top:4px">Your Equipment</div>
+      <div class="info-refrig-links">
+        ${matches.map(e => `<span class="refrig-tag" title="${escHtml(e.system)} · ${e.capacity} lbs">${escHtml(e.model)}</span>`).join('')}
+      </div>`;
+  });
+}
+
+// Populate refrigerant coverage table after DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  // Refrigerant coverage table
+  const tbody = document.getElementById('refrigTable');
+  Object.keys(REFRIG_DATA).sort().forEach(name => {
+    const d = REFRIG_DATA[name];
+    const minT = d.temps[0], maxT = d.temps[d.temps.length-1];
+    const psi70 = lookupPSI(name, 70);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="refrig-tag">${name}</span></td>
+      <td>${minT}°F – ${maxT}°F</td>
+      <td>${psi70 !== null ? psi70.toFixed(1) + ' PSI' : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Populate equipment refrigerant select
+  const eqSel = document.getElementById('eq-refrig');
+  const ph = document.createElement('option');
+  ph.value = ''; ph.textContent = '— Select —';
+  eqSel.appendChild(ph);
+  Object.keys(REFRIG_DATA).sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    eqSel.appendChild(opt);
+  });
+
+  // Heartbeat — keeps the Go server aware the window is open.
+  // Server exits ~20 s after pings stop (window closed).
+  function sendHeartbeat() {
+    fetch('/heartbeat', { method: 'POST' }).catch(() => {});
+  }
+  sendHeartbeat();
+  setInterval(sendHeartbeat, 8000);
+
+  // Show current version
+  const verEl = document.getElementById('current-version-label');
+  if (verEl) verEl.textContent = 'v' + APP_VERSION;
+
+  // Render saved equipment
+  renderEquipTable();
+
+  // Build info grid
+  buildInfoGrid();
+});
+</script>
+</body>
+</html>
