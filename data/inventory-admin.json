@@ -1,12 +1,4 @@
 {
-  "updated": "2026-09-19T05:29:11.829Z",
-  "tanks": [
-    {
-      "refrigerant": "R-32",
-      "location": "truck",
-      "scale": 16,
-      "tare": 1,
-      "tier": "staff"
-    }
-  ]
+  "updated": "2026-09-19T05:29:26.671Z",
+  "tanks": []
 }
